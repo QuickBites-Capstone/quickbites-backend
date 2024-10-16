@@ -12,6 +12,7 @@ class CreateOrdersTable extends Migration
             $table->id();
             $table->foreignId('cart_id')->nullable();
             $table->foreignId('order_status_id')->nullable();
+            $table->foreignId('reason_id')->nullable();
             $table->timestamps();
         });
     }
