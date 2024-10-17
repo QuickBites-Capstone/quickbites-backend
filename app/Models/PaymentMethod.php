@@ -11,9 +11,8 @@ class PaymentMethod extends Model
 
     protected $fillable = ['name'];
 
-    // A payment method can be used for many carts
     public function carts()
     {
-        return $this->hasMany(Cart::class);
+        return $this->hasMany(Cart::class, 'payment_id');
     }
 }
