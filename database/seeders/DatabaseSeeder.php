@@ -8,6 +8,9 @@ class DatabaseSeeder extends Seeder
 {
     public function run()
     {
+        // Set the current timestamp
+        $now = Carbon::now();
+
         // Seed Roles
         DB::table('roles')->insert([
             ['name' => 'admin'],
@@ -22,8 +25,8 @@ class DatabaseSeeder extends Seeder
                 'email' => 'joshua@gmail.com',
                 'password' => bcrypt('gwapo123'), // Hash the password
                 'role_id' => 1,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'first_name' => 'Charles',
@@ -31,8 +34,8 @@ class DatabaseSeeder extends Seeder
                 'email' => 'charles@gmail.com',
                 'password' => bcrypt('gwapo123'),
                 'role_id' => 2,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
         ]);
 
@@ -44,15 +47,15 @@ class DatabaseSeeder extends Seeder
                 'email' => 'john@gmail.com',
                 'password' => bcrypt('gwapo123'),
                 'balance' => 0,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
         ]);
 
         // Seed Categories
         DB::table('categories')->insert([
-            ['name' => 'Meals', 'image' => 'storage/image.jpg', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['name' => 'Snacks', 'image' => 'storage/image.jpg', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['name' => 'Meals', 'image' => 'storage/image.jpg', 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Snacks', 'image' => 'storage/image.jpg', 'created_at' => $now, 'updated_at' => $now],
         ]);
 
         // Seed Product Status
@@ -70,8 +73,8 @@ class DatabaseSeeder extends Seeder
                 'stock_quantity' => 100,
                 'status_id' => 1,
                 'category_id' => 1,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'name' => 'Rice',
@@ -80,8 +83,8 @@ class DatabaseSeeder extends Seeder
                 'stock_quantity' => 0,
                 'status_id' => 2,
                 'category_id' => 1,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
         ]);
 
@@ -98,8 +101,8 @@ class DatabaseSeeder extends Seeder
                 'total' => 1750,
                 'schedule' => '14:20:00',
                 'payment_id' => 1,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
         ]);
 
@@ -110,16 +113,16 @@ class DatabaseSeeder extends Seeder
                 'product_id' => 1,
                 'quantity' => 50,
                 'price' => 1500,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
                 'cart_id' => 1,
                 'product_id' => 2,
                 'quantity' => 25,
                 'price' => 250,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
         ]);
 
@@ -144,8 +147,8 @@ class DatabaseSeeder extends Seeder
                 'cart_id' => 1,
                 'order_status_id' => 1,
                 'reason_id' => null, // or a valid reason id if applicable
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
         ]);
     }
