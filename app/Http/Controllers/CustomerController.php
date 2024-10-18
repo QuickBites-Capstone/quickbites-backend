@@ -6,6 +6,8 @@ use App\Models\Customer;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use App\Mail\WelcomeCustomer;
+use Illuminate\Support\Facades\Mail;
 
 
 
@@ -22,18 +24,18 @@ class CustomerController extends Controller
         return response()->json($customers);
     }
 
-    public function register(Request $request){
+    public function register(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|max:255',
-            'password' => 'required|string|min:10|confirmed',
+            'password' => 'required|string|min:8|confirmed',
         ]);
-        if($validator->fails()){
+
+        if ($validator->fails()) {
             return response()->json(['errors'  => $validator->errors()], 422);
         }
-
-        
 
         $customer = Customer::create([
             'first_name' => $request->first_name,
@@ -42,18 +44,21 @@ class CustomerController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-       
-        return response()->json([ 
+        Mail::to($request->email)->send(new WelcomeCustomer($customer));
+
+        return response()->json([
             'message' => 'Successful registration!',
-            'customer' => $customer], 201);
+            'customer' => $customer
+        ], 201);
     }
 
-    public function login(Request $request){
+    public function login(Request $request)
+    {
         $credentials = $request->only('email', 'password');
 
         $customers = Customer::where('email',  $request->email)->first();
 
-        if(!$customers || !Hash::check($request->password, $customers->password)){
+        if (!$customers || !Hash::check($request->password, $customers->password)) {
             return response()->json([
                 'message' => 'Invalid credentials!',
             ], 401);
@@ -68,7 +73,8 @@ class CustomerController extends Controller
         ], 200);
     }
 
-    public function logout(Request $request){
+    public function logout(Request $request)
+    {
         $request->user()->tokens()->delete();
 
         return response()->json([
@@ -78,7 +84,7 @@ class CustomerController extends Controller
 
     public function getCustomerName(Request $request)
     {
-       
+
         $customer = $request->user();
 
         if (!$customer) {
