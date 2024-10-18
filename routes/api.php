@@ -12,6 +12,10 @@ Route::get('/admins', [AdminController::class, 'index']);
 Route::get('/roles', [RoleController::class, 'index']);
 
 Route::get('/customers', [CustomerController::class, 'search']);
+Route::post('/register', [CustomerController::class, 'register']);
+Route::post('/login', [CustomerController::class, 'login']);
+Route::middleware('auth:sanctum')->post('/logout', [CustomerController::class, 'logout']);
+Route::middleware('auth:sanctum')->get('/get-customer-name', [CustomerController::class, 'getCustomerName']);
 
 Route::get('/reasons', [ReasonController::class, 'index']);
 
