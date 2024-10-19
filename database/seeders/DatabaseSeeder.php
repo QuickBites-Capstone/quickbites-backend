@@ -54,9 +54,44 @@ class DatabaseSeeder extends Seeder
 
         // Seed Categories
         DB::table('categories')->insert([
-            ['name' => 'Meals', 'image' => 'storage/image.jpg', 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'Snacks', 'image' => 'storage/image.jpg', 'created_at' => $now, 'updated_at' => $now],
+            [
+                'name' => 'Meals',
+                'image' => '<a href="https://www.flaticon.com/free-icons/lunch" title="lunch icons">Lunch icons created by Freepik - Flaticon</a>', // Meal Icon
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'name' => 'Snacks',
+                'image' => 'https://image.flaticon.com/icons/png/50/3254268.png',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'name' => 'Chips',
+                'image' => 'https://image.flaticon.com/icons/png/512/1914/1914611.png', 
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'name' => 'Candies',
+                'image' => 'https://image.flaticon.com/icons/png/512/2111/2111670.png', 
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'name' => 'Drinks',
+                'image' => 'https://image.flaticon.com/icons/png/512/868/868431.png', 
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'name' => 'Supplies',
+                'image' => 'https://image.flaticon.com/icons/png/512/3045/3045534.png', 
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
         ]);
+        
 
         // Seed Product Status
         DB::table('product_status')->insert([

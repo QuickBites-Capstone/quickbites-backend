@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReasonController;
@@ -10,6 +11,8 @@ use App\Http\Controllers\CustomerController;
 
 Route::get('/admins', [AdminController::class, 'index']);
 Route::get('/roles', [RoleController::class, 'index']);
+
+Route::get('/category', [CategoryController::class, 'index']);
 
 Route::get('/customers', [CustomerController::class, 'search']);
 Route::post('/register', [CustomerController::class, 'register']);
