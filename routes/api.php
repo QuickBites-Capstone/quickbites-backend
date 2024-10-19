@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->get('/get-customer-name', [CustomerController
 Route::get('/reasons', [ReasonController::class, 'index']);
 
 Route::get('/orders', [OrderController::class, 'index']);
+Route::get('/orders/today', [OrderController::class, 'todayOrders']);
 Route::post('/orders', [OrderController::class, 'store']);
 
 Route::get('/user', function (Request $request) {

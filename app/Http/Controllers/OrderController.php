@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use Carbon\Carbon;
 
 class OrderController extends Controller
 {
@@ -17,6 +18,24 @@ class OrderController extends Controller
         ])->get()->map(function ($order) {
             return $this->formatOrder($order);
         });
+    }
+
+    public function todayOrders()
+    {
+        $today = Carbon::today();
+
+        return Order::with([
+            'cart.customer',
+            'cart.cartItems.product',
+            'cart.paymentMethod',
+            'orderStatus',
+            'reason'
+        ])
+            ->whereDate('created_at', $today)
+            ->get()
+            ->map(function ($order) {
+                return $this->formatOrder($order);
+            });
     }
 
     private function formatOrder($order)
@@ -89,7 +108,7 @@ class OrderController extends Controller
     {
         return $reason ? [
             'id' => $reason->id,
-            'name' => $reason->name,
+            'description' => $reason->description,
         ] : null;
     }
 }
