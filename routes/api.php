@@ -26,6 +26,10 @@ Route::get('/orders', [OrderController::class, 'index']);
 Route::get('/orders/today', [OrderController::class, 'todayOrders']);
 Route::post('/orders', [OrderController::class, 'store']);
 
+Route::post('/admin/login', [AdminController::class, 'login']);
+Route::post('/admin/register', [AdminController::class, 'register']);
+Route::middleware('auth:sanctum')->post('/admin/logout', [AdminController::class, 'logout']);
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
