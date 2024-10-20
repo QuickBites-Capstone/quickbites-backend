@@ -34,9 +34,12 @@ class ProductController extends Controller
             'image' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
-            'status_id' => 'required|exists:product_statuses,id',
             'category_id' => 'required|exists:categories,id',
         ]);
+
+        $status_id = $validatedData['stock_quantity'] === 0 ? 2 : 1;
+
+        $validatedData['status_id'] = $status_id;
 
         $product = Product::create($validatedData);
 
