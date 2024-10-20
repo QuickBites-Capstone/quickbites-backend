@@ -41,7 +41,7 @@ class ProductController extends Controller
             'price' => 'required|numeric',
             'stock_quantity' => 'required|integer',
             'category_id' => 'required|exists:categories,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image',
         ]);
 
         $product = new Product();
