@@ -17,10 +17,8 @@ class AdminController extends Controller
         $admins = Admin::all();
         return response()->json($admins);
     }
-
     public function register(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -52,20 +50,20 @@ class AdminController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        $admins = Admin::where('email',  $request->email)->first();
+        $admin = Admin::where('email', $request->email)->first();
 
-        if (!$admins || !Hash::check($request->password, $admins->password)) {
+        if (!$admin || !Hash::check($request->password, $admin->password)) {
             return response()->json([
                 'message' => 'Invalid credentials!',
             ], 401);
         }
 
-        $token = $admins->createToken('auth_token')->plainTextToken;
+        $token = $admin->createToken('admin-auth-token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful!',
             'token' => $token,
-            'customer' => $admins,
+            'admin' => $admin,
         ], 200);
     }
 
@@ -75,6 +73,22 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => 'Logged out successfully!',
+        ], 200);
+    }
+
+    public function getAdminName(Request $request)
+    {
+        $admin = $request->user();
+
+        if (!$admin) {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+
+        return response()->json([
+            'first_name' => $admin->first_name,
+            'last_name' => $admin->last_name,
+            'email' => $admin->email,
+            'role_id' => $admin->role_id,
         ], 200);
     }
 }

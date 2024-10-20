@@ -14,9 +14,6 @@ Route::get('/products', [ProductController::class, 'getProductsByCategory']);
 Route::post('/products', [ProductController::class, 'store']);
 Route::get('/categories', [CategoryController::class, 'index']);
 
-Route::get('/admins', [AdminController::class, 'index']);
-Route::get('/roles', [RoleController::class, 'index']);
-
 Route::get('/customers', [CustomerController::class, 'search']);
 Route::post('/register', [CustomerController::class, 'register']);
 Route::post('/login', [CustomerController::class, 'login']);
@@ -29,8 +26,13 @@ Route::get('/orders', [OrderController::class, 'index']);
 Route::get('/orders/today', [OrderController::class, 'todayOrders']);
 Route::post('/orders', [OrderController::class, 'store']);
 
+
+
+Route::get('/roles', [RoleController::class, 'index']);
+Route::get('/admins', [AdminController::class, 'index']);
 Route::post('/admin/login', [AdminController::class, 'login']);
 Route::post('/admin/register', [AdminController::class, 'register']);
+Route::middleware('auth:sanctum')->get('/get-admin-name', [AdminController::class, 'getAdminName']);
 Route::middleware('auth:sanctum')->post('/admin/logout', [AdminController::class, 'logout']);
 
 Route::get('/user', function (Request $request) {
