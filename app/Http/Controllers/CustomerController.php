@@ -96,4 +96,32 @@ class CustomerController extends Controller
             'last_name' => $customer->last_name,
         ], 200);
     }
+
+    public function getCustomerById($id)
+    {
+        $customer = Customer::find($id);
+
+        if (!$customer) {
+            return response()->json(['message' => 'Customer not found'], 404);
+        }
+
+        return response()->json($customer, 200);
+    }
+
+    public function addCredits(Request $request, $id)
+    {
+        $request->validate([
+            'amount' => 'required|integer|min:1',
+        ]);
+
+        $customer = Customer::findOrFail($id);
+
+        $customer->balance += $request->input('amount');
+        $customer->save();
+
+        return response()->json([
+            'message' => 'Credits added successfully',
+            'balance' => $customer->balance,
+        ]);
+    }
 }

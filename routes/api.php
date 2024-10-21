@@ -18,6 +18,9 @@ Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 Route::get('/categories', [CategoryController::class, 'index']);
 
 Route::get('/customers', [CustomerController::class, 'search']);
+Route::post('/customers/{id}/add-credits', [CustomerController::class, 'addCredits']);
+Route::get('/customers/{id}', [CustomerController::class, 'getCustomerById']);
+
 Route::post('/register', [CustomerController::class, 'register']);
 Route::post('/login', [CustomerController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [CustomerController::class, 'logout']);
