@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
@@ -110,5 +111,32 @@ class OrderController extends Controller
             'id' => $reason->id,
             'description' => $reason->description,
         ] : null;
+    }
+
+    public function updateOrderStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:complete,ready,accept,cancel',
+            'reason_id' => 'nullable|exists:reasons,id',
+        ]);
+
+        $order = Order::findOrFail($id);
+
+        $statusMap = [
+            'complete' => 4, // ID for 'Complete' status
+            'ready' => 3,    // ID for 'Ready for pick-up' status
+            'accept' => 2,   // ID for 'In progress' status
+            'cancel' => 5,   // ID for 'Cancelled' status
+        ];
+
+        $order->order_status_id = $statusMap[$request->input('status')];
+
+        if ($request->input('status') === 'cancel') {
+            $order->reason_id = $request->input('reason_id');
+        }
+
+        $order->save();
+
+        return response()->json($this->formatOrder($order), 200);
     }
 }
