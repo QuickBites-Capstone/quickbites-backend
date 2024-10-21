@@ -28,7 +28,7 @@ Route::get('/reasons', [ReasonController::class, 'index']);
 Route::get('/orders', [OrderController::class, 'index']);
 Route::get('/orders/today', [OrderController::class, 'todayOrders']);
 Route::post('/orders', [OrderController::class, 'store']);
-
+Route::patch('/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
 
 
 Route::get('/roles', [RoleController::class, 'index']);
