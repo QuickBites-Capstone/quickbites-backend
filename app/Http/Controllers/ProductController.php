@@ -98,7 +98,7 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        if (Storage::disk('public')->exists($product->image)) {
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
             Storage::disk('public')->delete($product->image);
         }
 
