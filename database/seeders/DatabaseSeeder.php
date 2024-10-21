@@ -44,7 +44,9 @@ class DatabaseSeeder extends Seeder
             [
                 'first_name' => 'John',
                 'last_name' => 'Doe',
+                'profile_picture' => 'https://img.freepik.com/premium-vector/people-saving-money_24908-51569.jpg?semt=ais_hybrid',
                 'email' => 'john@gmail.com',
+                'phone_number' => '091234567',
                 'password' => bcrypt('gwapo123'),
                 'balance' => 0,
                 'created_at' => $now,
@@ -56,42 +58,42 @@ class DatabaseSeeder extends Seeder
         DB::table('categories')->insert([
             [
                 'name' => 'Meals',
-                'image' => '<a href="https://www.flaticon.com/free-icons/lunch" title="lunch icons">Lunch icons created by Freepik - Flaticon</a>', // Meal Icon
+                'image' => 'https://cdn-icons-png.freepik.com/512/7997/7997145.png',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
                 'name' => 'Snacks',
-                'image' => 'https://image.flaticon.com/icons/png/50/3254268.png',
+                'image' => 'https://cdn-icons-png.freepik.com/512/5814/5814149.png',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
                 'name' => 'Chips',
-                'image' => 'https://image.flaticon.com/icons/png/512/1914/1914611.png', 
+                'image' => 'https://cdn-icons-png.freepik.com/512/2575/2575818.png',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
                 'name' => 'Candies',
-                'image' => 'https://image.flaticon.com/icons/png/512/2111/2111670.png', 
+                'image' => 'https://cdn-icons-png.freepik.com/512/1888/1888859.png',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
                 'name' => 'Drinks',
-                'image' => 'https://image.flaticon.com/icons/png/512/868/868431.png', 
+                'image' => 'https://cdn-icons-png.freepik.com/256/783/783065.png?semt=ais_hybrid',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
                 'name' => 'Supplies',
-                'image' => 'https://image.flaticon.com/icons/png/512/3045/3045534.png', 
+                'image' => 'https://cdn-icons-png.freepik.com/256/1025/1025801.png?semt=ais_hybrid',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
         ]);
-        
+
 
         // Seed Product Status
         DB::table('product_status')->insert([
