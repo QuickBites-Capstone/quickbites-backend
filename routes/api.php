@@ -16,6 +16,7 @@ Route::post('/products', [ProductController::class, 'store']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
 Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{categoryId}/products', [CategoryController::class, 'getProductsByCategory']);
 
 Route::get('/customers', [CustomerController::class, 'search']);
 Route::post('/customers/{id}/add-credits', [CustomerController::class, 'addCredits']);
