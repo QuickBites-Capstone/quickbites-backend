@@ -17,6 +17,7 @@ class Customer extends Model
         'last_name',
         'profile_picture',
         'email',
+        'phone_number',
         'password',
         'balance',
         'created_at',
