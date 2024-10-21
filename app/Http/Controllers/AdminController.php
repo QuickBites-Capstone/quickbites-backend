@@ -91,4 +91,13 @@ class AdminController extends Controller
             'role_id' => $admin->role_id,
         ], 200);
     }
+
+    public function destroy($id)
+    {
+        $admin = Admin::findOrFail($id);
+
+        $admin->delete();
+
+        return response()->json(['message' => 'Admin deleted successfully!'], 200);
+    }
 }

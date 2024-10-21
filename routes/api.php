@@ -33,6 +33,7 @@ Route::post('/orders', [OrderController::class, 'store']);
 
 Route::get('/roles', [RoleController::class, 'index']);
 Route::get('/admins', [AdminController::class, 'index']);
+Route::delete('/admins/{id}', [AdminController::class, 'destroy']);
 Route::post('/admin/login', [AdminController::class, 'login']);
 Route::post('/admin/register', [AdminController::class, 'register']);
 Route::middleware('auth:sanctum')->get('/get-admin-name', [AdminController::class, 'getAdminName']);
