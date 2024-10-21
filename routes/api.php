@@ -19,6 +19,9 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{categoryId}/products', [CategoryController::class, 'getProductsByCategory']);
 
 Route::get('/customers', [CustomerController::class, 'search']);
+Route::post('/customers/{id}/add-credits', [CustomerController::class, 'addCredits']);
+Route::get('/customers/{id}', [CustomerController::class, 'getCustomerById']);
+
 Route::post('/register', [CustomerController::class, 'register']);
 Route::post('/login', [CustomerController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [CustomerController::class, 'logout']);
@@ -29,11 +32,12 @@ Route::get('/reasons', [ReasonController::class, 'index']);
 Route::get('/orders', [OrderController::class, 'index']);
 Route::get('/orders/today', [OrderController::class, 'todayOrders']);
 Route::post('/orders', [OrderController::class, 'store']);
-
+Route::patch('/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
 
 
 Route::get('/roles', [RoleController::class, 'index']);
 Route::get('/admins', [AdminController::class, 'index']);
+Route::delete('/admins/{id}', [AdminController::class, 'destroy']);
 Route::post('/admin/login', [AdminController::class, 'login']);
 Route::post('/admin/register', [AdminController::class, 'register']);
 Route::middleware('auth:sanctum')->get('/get-admin-name', [AdminController::class, 'getAdminName']);

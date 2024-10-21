@@ -30,6 +30,7 @@ class CustomerController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|max:255',
+            'phone_number' => 'nullable|string|max:255',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -41,6 +42,7 @@ class CustomerController extends Controller
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
+            'phone_number' => $request->phone_number,
             'password' => Hash::make($request->password),
         ]);
 
@@ -95,5 +97,33 @@ class CustomerController extends Controller
             'first_name' => $customer->first_name,
             'last_name' => $customer->last_name,
         ], 200);
+    }
+
+    public function getCustomerById($id)
+    {
+        $customer = Customer::find($id);
+
+        if (!$customer) {
+            return response()->json(['message' => 'Customer not found'], 404);
+        }
+
+        return response()->json($customer, 200);
+    }
+
+    public function addCredits(Request $request, $id)
+    {
+        $request->validate([
+            'amount' => 'required|integer|min:1',
+        ]);
+
+        $customer = Customer::findOrFail($id);
+
+        $customer->balance += $request->input('amount');
+        $customer->save();
+
+        return response()->json([
+            'message' => 'Credits added successfully',
+            'balance' => $customer->balance,
+        ]);
     }
 }
