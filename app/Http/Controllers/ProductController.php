@@ -8,6 +8,32 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
+    public function index(Request $request)
+    {
+        $perPage = 10;
+
+        $products = Product::with('category')
+            ->orderBy('id', 'asc')
+            ->paginate($perPage);
+
+        $productsWithImageUrl = $products->getCollection()->map(function ($product) {
+            $product->image_url = $product->image ? Storage::url($product->image) : null;
+            return $product;
+        });
+
+        return response()->json([
+            'data' => $productsWithImageUrl,
+            'pagination' => [
+                'total' => $products->total(),
+                'current_page' => $products->currentPage(),
+                'per_page' => $products->perPage(),
+                'last_page' => $products->lastPage(),
+                'next_page_url' => $products->nextPageUrl(),
+                'prev_page_url' => $products->previousPageUrl(),
+            ]
+        ], 200);
+    }
+
     public function getProductsByCategory(Request $request)
     {
         $categoryName = strtolower($request->query('category'));
@@ -98,7 +124,7 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        if (Storage::disk('public')->exists($product->image)) {
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
             Storage::disk('public')->delete($product->image);
         }
 
