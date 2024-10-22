@@ -11,6 +11,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
 
 Route::get('/products', [ProductController::class, 'getProductsByCategory']);
+Route::get('/products/all', [ProductController::class, 'index']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
 Route::post('/products', [ProductController::class, 'store']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
