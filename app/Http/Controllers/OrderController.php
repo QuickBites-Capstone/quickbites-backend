@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Events\OrderStatusUpdated;
 
 class OrderController extends Controller
 {
@@ -136,6 +137,9 @@ class OrderController extends Controller
         }
 
         $order->save();
+
+        // Dispatch the OrderStatusUpdated event
+        event(new OrderStatusUpdated($order));
 
         return response()->json($this->formatOrder($order), 200);
     }
