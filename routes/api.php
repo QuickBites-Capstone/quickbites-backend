@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\OrderController;
@@ -14,6 +15,14 @@ Route::get('/products', [ProductController::class, 'getProductsByCategory']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
 Route::post('/products', [ProductController::class, 'store']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+Route::post('/cart/{customerId}', [CartController::class, 'store']);
+Route::get('/cart/{customerId}', [CartController::class, 'getCart']);
+Route::post('/cart/{cartId}/items', [CartController::class, 'addCartItem']);
+Route::get('/cart/{cartId}/items', [CartController::class, 'getCartItems']);
+Route::put('/cart/{cartId}/items/{itemId}', [CartController::class, 'updateCartItem']);
+Route::delete('/cart/{cartId}/items/{itemId}', [CartController::class, 'removeCartItem']);
+Route::delete('/cart/{cartId}', [CartController::class, 'clearCart']);
 
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{categoryId}/products', [CategoryController::class, 'getProductsByCategory']);
