@@ -138,6 +138,7 @@ class OrderController extends Controller
 
         $order->save();
 
+        // Return the updated order to the admin
         return response()->json($this->formatOrder($order), 200);
     }
 }

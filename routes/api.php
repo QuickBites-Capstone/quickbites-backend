@@ -9,6 +9,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReasonController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SSEController;
+
 
 Route::get('/products', [ProductController::class, 'getProductsByCategory']);
 Route::get('/products/all', [ProductController::class, 'index']);
@@ -34,6 +36,7 @@ Route::get('/orders', [OrderController::class, 'index']);
 Route::get('/orders/today', [OrderController::class, 'todayOrders']);
 Route::post('/orders', [OrderController::class, 'store']);
 Route::patch('/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
+Route::get('/order-updates', [SSEController::class, 'stream']);
 
 
 Route::get('/roles', [RoleController::class, 'index']);

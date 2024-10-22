@@ -94,6 +94,7 @@ class CustomerController extends Controller
         }
 
         return response()->json([
+            'id' => $customer->id,
             'first_name' => $customer->first_name,
             'last_name' => $customer->last_name,
         ], 200);
