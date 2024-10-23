@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\Mail\WelcomeCustomer;
 use Illuminate\Support\Facades\Mail;
-
+use App\Http\Services\ImageService;
 
 
 class CustomerController extends Controller
@@ -32,6 +32,7 @@ class CustomerController extends Controller
             'email' => 'required|string|max:255',
             'phone_number' => 'nullable|string|max:255',
             'password' => 'required|string|min:8|confirmed',
+            'profile_picture' => 'nullable|image',
         ]);
 
         if ($validator->fails()) {
@@ -46,11 +47,18 @@ class CustomerController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        if ($request->hasFile('profile_picture')) {
+            $imagePath = $this->imageService->storeImage($request->file('profile_picture'), 'customers');
+            $customer->profile_picture = $imagePath;
+            $customer->save();
+        }
+
         Mail::to($request->email)->send(new WelcomeCustomer($customer));
 
         return response()->json([
             'message' => 'Successful registration!',
-            'customer' => $customer
+            'customer' => $customer,
+            'profile_picture_url' => $customer->profile_picture ? $this->imageService->getTemporaryImageUrl($customer->profile_picture) : null,
         ], 201);
     }
 
@@ -94,8 +102,15 @@ class CustomerController extends Controller
         }
 
         return response()->json([
-            'first_name' => $customer->first_name,
-            'last_name' => $customer->last_name,
+            [
+                'id' => $customer->id,
+                'first_name' => $customer->first_name,
+                'last_name' => $customer->last_name,
+                'email' => $customer->email,
+                'phone_number' => $customer->phone_number,
+                'balance' => $customer->balance,
+                'profile_picture_url' => $customer->profile_picture ? $this->imageService->getTemporaryImageUrl($customer->profile_picture) : null,
+            ]
         ], 200);
     }
 
@@ -125,5 +140,74 @@ class CustomerController extends Controller
             'message' => 'Credits added successfully',
             'balance' => $customer->balance,
         ]);
+    }
+
+    public function updateCustomer(Request $request)
+    {
+        $customer = $request->user();
+
+        if (!$customer) {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:customers,email,' . $customer->id,
+            'phone_number' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $customer->first_name = $request->first_name;
+        $customer->last_name = $request->last_name;
+        $customer->email = $request->email;
+        $customer->phone_number = $request->phone_number;
+
+        $customer->save();
+
+        return response()->json([
+            'message' => 'Profile updated successfully!',
+            'customer' => $customer,
+        ], 200);
+    }
+
+    public function updateProfilePicture(Request $request)
+    {
+        $customer = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'profile_picture' => 'nullable|image',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        if ($request->hasFile('profile_picture')) {
+            if ($customer->profile_picture) {
+                $this->imageService->deleteImage($customer->profile_picture);
+            }
+
+            $imagePath = $this->imageService->storeImage($request->file('profile_picture'), 'customers');
+            $customer->profile_picture = $imagePath;
+        }
+
+        $customer->save();
+
+        return response()->json([
+            'message' => 'Profile picture updated successfully!',
+            'profile_picture_url' => $customer->profile_picture ? $this->imageService->getTemporaryImageUrl($customer->profile_picture) : null,
+        ], 200);
+    }
+
+
+    protected $imageService;
+
+    public function __construct(ImageService $imageService)
+    {
+        $this->imageService = $imageService;
     }
 }

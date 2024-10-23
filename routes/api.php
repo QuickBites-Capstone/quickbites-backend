@@ -35,6 +35,8 @@ Route::post('/register', [CustomerController::class, 'register']);
 Route::post('/login', [CustomerController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [CustomerController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/get-customer-name', [CustomerController::class, 'getCustomerName']);
+Route::middleware('auth:sanctum')->put('/update-customer', [CustomerController::class, 'updateCustomer']);
+Route::middleware('auth:sanctum')->post('/update-profile-picture', [CustomerController::class, 'updateProfilePicture']);
 
 Route::get('/reasons', [ReasonController::class, 'index']);
 
