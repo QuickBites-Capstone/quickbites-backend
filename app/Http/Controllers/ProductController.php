@@ -124,8 +124,13 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
+<<<<<<< Updated upstream
         if ($product->image && Storage::disk('public')->exists($product->image)) {
             Storage::disk('public')->delete($product->image);
+=======
+        if ($product->image) {
+            $this->imageService->deleteImage($product->image);
+>>>>>>> Stashed changes
         }
 
         $product->delete();
