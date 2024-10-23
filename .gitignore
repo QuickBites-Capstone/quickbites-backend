@@ -4,4 +4,3 @@ composer.phar
 .env.backup
 .env.production
 .env
-.env
