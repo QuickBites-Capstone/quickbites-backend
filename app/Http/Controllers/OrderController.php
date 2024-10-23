@@ -43,6 +43,7 @@ class OrderController extends Controller
     {
         return [
             'id' => $order->id,
+            'order_number' => $order->order_number,
             'cart_id' => $order->cart_id,
             'order_status_id' => $order->order_status_id,
             'reason_id' => $order->reason_id,
