@@ -12,7 +12,7 @@ class CreateCartsTable extends Migration
             $table->id();
             $table->foreignId('customer_id')->nullable();
             $table->integer('total')->nullable();
-            $table->time('schedule')->nullable();
+            $table->string('schedule')->nullable();
             $table->foreignId('payment_id')->nullable();
             $table->timestamps();
         });

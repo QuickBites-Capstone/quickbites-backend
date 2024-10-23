@@ -52,7 +52,8 @@ class OrderController extends Controller
             'cart' => [
                 'payment_method' => $this->formatPaymentMethod($order->cart->paymentMethod),
                 'total' => $order->cart ? $order->cart->total : null,
-                'cart_items' => $this->formatCartItems($order->cart)
+                'cart_items' => $this->formatCartItems($order->cart),
+                'schedule' => $order->cart->schedule
             ],
             'order_status' => $this->formatOrderStatus($order->orderStatus),
             'reason' => $this->formatReason($order->reason)

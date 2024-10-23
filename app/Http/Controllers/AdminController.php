@@ -23,6 +23,7 @@ class AdminController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:admins',
+            'role_id' => 'required|integer',
             'password' => 'string|confirmed',
         ]);
 
