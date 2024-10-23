@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
@@ -47,6 +48,28 @@ class DatabaseSeeder extends Seeder
                 'profile_picture' => 'https://img.freepik.com/premium-vector/people-saving-money_24908-51569.jpg?semt=ais_hybrid',
                 'email' => 'john@gmail.com',
                 'phone_number' => '091234567',
+                'password' => bcrypt('gwapo123'),
+                'balance' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'first_name' => 'Jane',
+                'last_name' => 'Smith',
+                'profile_picture' => 'https://img.freepik.com/free-vector/people-holding-coins-illustration_23-2148744840.jpg',
+                'email' => 'jane@gmail.com',
+                'phone_number' => '091234568',
+                'password' => bcrypt('gwapo123'),
+                'balance' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'first_name' => 'Alice',
+                'last_name' => 'Johnson',
+                'profile_picture' => 'https://img.freepik.com/free-vector/people-counting-money-illustration_23-2148744840.jpg',
+                'email' => 'alice@gmail.com',
+                'phone_number' => '091234569',
                 'password' => bcrypt('gwapo123'),
                 'balance' => 0,
                 'created_at' => $now,
@@ -180,6 +203,22 @@ class DatabaseSeeder extends Seeder
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
+            [
+                'customer_id' => 2,
+                'total' => 1200,
+                'schedule' => 'Standard',
+                'payment_id' => 1,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'customer_id' => 3,
+                'total' => 900,
+                'schedule' => 'Standard',
+                'payment_id' => 2,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
         ]);
 
         // Seed Cart Items
@@ -197,6 +236,30 @@ class DatabaseSeeder extends Seeder
                 'product_id' => 2,
                 'quantity' => 25,
                 'price' => 250,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'cart_id' => 2,
+                'product_id' => 3,
+                'quantity' => 20,
+                'price' => 800,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'cart_id' => 2,
+                'product_id' => 4,
+                'quantity' => 10,
+                'price' => 400,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'cart_id' => 3,
+                'product_id' => 5,
+                'quantity' => 30,
+                'price' => 750,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
@@ -220,9 +283,26 @@ class DatabaseSeeder extends Seeder
         // Seed Orders
         DB::table('orders')->insert([
             [
+                'order_number' => Str::random(5),
                 'cart_id' => 1,
                 'order_status_id' => 1,
-                'reason_id' => null, // or a valid reason id if applicable
+                'reason_id' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'order_number' => Str::random(5),
+                'cart_id' => 2,
+                'order_status_id' => 1,
+                'reason_id' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'order_number' => Str::random(5),
+                'cart_id' => 3,
+                'order_status_id' => 1,
+                'reason_id' => null,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
