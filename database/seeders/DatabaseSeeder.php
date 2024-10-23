@@ -194,76 +194,76 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Seed Carts
-        DB::table('carts')->insert([
-            [
-                'customer_id' => 1,
-                'total' => 1750,
-                'schedule' => '14:20:00',
-                'payment_id' => 1,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'customer_id' => 2,
-                'total' => 1200,
-                'schedule' => 'Standard',
-                'payment_id' => 1,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'customer_id' => 3,
-                'total' => 900,
-                'schedule' => 'Standard',
-                'payment_id' => 2,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-        ]);
+        // DB::table('carts')->insert([
+        //     [
+        //         'customer_id' => 1,
+        //         'total' => 1750,
+        //         'schedule' => '14:20:00',
+        //         'payment_id' => 1,
+        //         'created_at' => $now,
+        //         'updated_at' => $now,
+        //     ],
+        //     [
+        //         'customer_id' => 2,
+        //         'total' => 1200,
+        //         'schedule' => 'Standard',
+        //         'payment_id' => 1,
+        //         'created_at' => $now,
+        //         'updated_at' => $now,
+        //     ],
+        //     [
+        //         'customer_id' => 3,
+        //         'total' => 900,
+        //         'schedule' => 'Standard',
+        //         'payment_id' => 2,
+        //         'created_at' => $now,
+        //         'updated_at' => $now,
+        //     ],
+        // ]);
 
         // Seed Cart Items
-        DB::table('cart_items')->insert([
-            [
-                'cart_id' => 1,
-                'product_id' => 1,
-                'quantity' => 50,
-                'price' => 1500,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'cart_id' => 1,
-                'product_id' => 2,
-                'quantity' => 25,
-                'price' => 250,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'cart_id' => 2,
-                'product_id' => 3,
-                'quantity' => 20,
-                'price' => 800,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'cart_id' => 2,
-                'product_id' => 4,
-                'quantity' => 10,
-                'price' => 400,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'cart_id' => 3,
-                'product_id' => 5,
-                'quantity' => 30,
-                'price' => 750,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-        ]);
+        // DB::table('cart_items')->insert([
+        //     [
+        //         'cart_id' => 1,
+        //         'product_id' => 1,
+        //         'quantity' => 50,
+        //         'price' => 1500,
+        //         'created_at' => $now,
+        //         'updated_at' => $now,
+        //     ],
+        //     [
+        //         'cart_id' => 1,
+        //         'product_id' => 2,
+        //         'quantity' => 25,
+        //         'price' => 250,
+        //         'created_at' => $now,
+        //         'updated_at' => $now,
+        //     ],
+        //     [
+        //         'cart_id' => 2,
+        //         'product_id' => 3,
+        //         'quantity' => 20,
+        //         'price' => 800,
+        //         'created_at' => $now,
+        //         'updated_at' => $now,
+        //     ],
+        //     [
+        //         'cart_id' => 2,
+        //         'product_id' => 4,
+        //         'quantity' => 10,
+        //         'price' => 400,
+        //         'created_at' => $now,
+        //         'updated_at' => $now,
+        //     ],
+        //     [
+        //         'cart_id' => 3,
+        //         'product_id' => 5,
+        //         'quantity' => 30,
+        //         'price' => 750,
+        //         'created_at' => $now,
+        //         'updated_at' => $now,
+        //     ],
+        // ]);
 
         // Seed Order Status
         DB::table('order_status')->insert([
