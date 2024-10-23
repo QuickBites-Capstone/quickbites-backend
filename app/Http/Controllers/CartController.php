@@ -17,27 +17,37 @@ class CartController extends Controller
         'items.*.product_id' => 'required|exists:products,id',
         'items.*.quantity' => 'required|integer|min:1',
     ]);
-
+    
     $customer = Customer::findOrFail($customerId);
-
     $cart = $customer->carts()->firstOrCreate([
+        'customer_id' => $customer->id, 
         'payment_id' => $request->payment_id ?? null,
     ]);
-
+    
     if ($request->has('items')) {
         foreach ($request->items as $item) {
-            $cartItem = $cart->cartItems()->updateOrCreate(
-                ['product_id' => $item['product_id']],
-                [
+            // Check if the cart item already exists
+            $cartItem = $cart->cartItems()->where('product_id', $item['product_id'])->first();
+
+            if ($cartItem) {
+                // If the item exists, increment the quantity
+                $cartItem->quantity += $item['quantity'];
+                $cartItem->price = $this->getProductPrice($item['product_id']); // Ensure price is updated
+                $cartItem->save();
+            } else {
+                // If it doesn't exist, create a new cart item
+                $cart->cartItems()->create([
+                    'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
                     'price' => $this->getProductPrice($item['product_id']),
-                ]
-            );
+                ]);
+            }
         }
     }
 
     return response()->json($cart->load('cartItems'), 201);
 }
+
 
     public function getCart($customerId)
     {
@@ -87,7 +97,6 @@ class CartController extends Controller
         $cartItem->quantity = $request->quantity;
 
         $cartItem->price = $this->getProductPrice($cartItem->product_id); 
-
         $cartItem->save();
 
         return response()->json($cartItem);
