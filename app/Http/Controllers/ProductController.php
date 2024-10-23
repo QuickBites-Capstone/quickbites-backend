@@ -4,10 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Http\Services\ImageService;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
+    protected $imageService;
+
+    public function __construct(ImageService $imageService)
+    {
+        $this->imageService = $imageService;
+    }
+
     public function index(Request $request)
     {
         $perPage = 10;
@@ -17,7 +25,7 @@ class ProductController extends Controller
             ->paginate($perPage);
 
         $productsWithImageUrl = $products->getCollection()->map(function ($product) {
-            $product->image_url = $product->image ? Storage::url($product->image) : null;
+            $product->image_url = $this->imageService->getTemporaryImageUrl($product->image);
             return $product;
         });
 
@@ -45,7 +53,7 @@ class ProductController extends Controller
             })->get();
 
             $productsWithImageUrl = $products->map(function ($product) {
-                $product->image_url = $product->image ? Storage::url($product->image) : null;
+                $product->image_url = $this->imageService->getTemporaryImageUrl($product->image);
                 return $product;
             });
 
@@ -76,9 +84,11 @@ class ProductController extends Controller
         $product->stock_quantity = $request->stock_quantity;
         $product->category_id = $request->category_id;
 
-        if ($request->hasFile('image')) {
+        $category = strtolower($product->category->name);
+        $folder = "products/{$category}";
 
-            $imagePath = $request->file('image')->store('products', 'public');
+        if ($request->hasFile('image')) {
+            $imagePath = $this->imageService->storeImage($request->file('image'), $folder);
             $product->image = $imagePath;
         } else {
             $product->image = null;
@@ -104,14 +114,18 @@ class ProductController extends Controller
         ]);
 
         $product = Product::findOrFail($id);
-
         $product->fill($request->only(['name', 'price', 'stock_quantity', 'category_id']));
+
+        $category = strtolower($product->category->name);
+        $folder = "products/{$category}";
 
         if ($request->hasFile('image')) {
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
-            $product->image = $request->file('image')->store('products', 'public');
+
+            $imagePath = $this->imageService->storeImage($request->file('image'), $folder);
+            $product->image = $imagePath;
         }
 
         $product->save();
@@ -119,13 +133,13 @@ class ProductController extends Controller
         return response()->json(['message' => 'Product updated successfully!'], 200);
     }
 
-
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
 
-        if ($product->image && Storage::disk('public')->exists($product->image)) {
-            Storage::disk('public')->delete($product->image);
+        if ($product->image) {
+            // Use ImageService to delete the image
+            $this->imageService->deleteImage($product->image);
         }
 
         $product->delete();
