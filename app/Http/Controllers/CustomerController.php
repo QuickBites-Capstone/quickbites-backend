@@ -21,6 +21,10 @@ class CustomerController extends Controller
             ->orWhere('last_name', 'LIKE', "%$query%")
             ->get();
 
+        $customers->each(function ($customer) {
+            $customer->profile_picture_url = $this->imageService->getTemporaryImageUrl($customer->profile_picture);
+        });
+
         return response()->json($customers);
     }
 

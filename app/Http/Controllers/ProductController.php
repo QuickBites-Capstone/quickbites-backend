@@ -16,6 +16,21 @@ class ProductController extends Controller
         $this->imageService = $imageService;
     }
 
+    public function search(Request $request)
+    {
+        $query = $request->input('search');
+
+        $products = Product::where('name', 'LIKE', "%$query%")
+            ->orWhere('category', 'LIKE', "%$query%")
+            ->get();
+
+        $products->each(function ($product) {
+            $product->image_url = $this->imageService->getTemporaryImageUrl($product->image);
+        });
+
+        return response()->json($products);
+    }
+
     public function index(Request $request)
     {
         $perPage = 10;
