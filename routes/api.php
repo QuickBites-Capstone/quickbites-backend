@@ -18,9 +18,9 @@ Route::post('/products', [ProductController::class, 'store']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
 Route::get('cart/{customerId}', [CartController::class, 'getCart']);
-Route::post('cart/{customerId}', [CartController::class, 'store']); 
-Route::put('cart/{cartId}/items/{itemId}', [CartController::class, 'updateCartItem']); 
-Route::delete('cart/{cartId}/items/{itemId}', [CartController::class, 'removeCartItem']); 
+Route::post('cart/{customerId}', [CartController::class, 'store']);
+Route::put('cart/{cartId}/items/{itemId}', [CartController::class, 'updateCartItem']);
+Route::delete('cart/{cartId}/items/{itemId}', [CartController::class, 'removeCartItem']);
 Route::delete('cart/{cartId}', [CartController::class, 'clearCart']);
 
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -37,6 +37,11 @@ Route::middleware('auth:sanctum')->get('/get-customer-name', [CustomerController
 Route::middleware('auth:sanctum')->get('/customers/balance', [CustomerController::class, 'getCustomerBalance']);
 Route::middleware('auth:sanctum')->put('/update-customer', [CustomerController::class, 'updateCustomer']);
 Route::middleware('auth:sanctum')->post('/update-profile-picture', [CustomerController::class, 'updateProfilePicture']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/send-otp', [CustomerController::class, 'sendOtpForPasswordChange']);
+    Route::post('/change-password', [CustomerController::class, 'changePassword']);
+    Route::post('/verify-otp', [CustomerController::class, 'verifyOtp']);
+});
 
 Route::get('/reasons', [ReasonController::class, 'index']);
 
