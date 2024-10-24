@@ -23,18 +23,18 @@ Route::put('cart/{cartId}/items/{itemId}', [CartController::class, 'updateCartIt
 Route::delete('cart/{cartId}/items/{itemId}', [CartController::class, 'removeCartItem']); 
 Route::delete('cart/{cartId}', [CartController::class, 'clearCart']);
 
-
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{categoryId}/products', [CategoryController::class, 'getProductsByCategory']);
+
 Route::get('/customers', [CustomerController::class, 'search']);
 Route::post('/customers/{id}/add-credits', [CustomerController::class, 'addCredits']);
-Route::get('/customers/{id}', [CustomerController::class, 'getCustomerById']);
+Route::get('/customers/{id}', [CustomerController::class, 'getCustomerBalanceById']);
 Route::put('customer/{customerId}/balance', [CustomerController::class, 'updateBalance']);
-
 Route::post('/register', [CustomerController::class, 'register']);
 Route::post('/login', [CustomerController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [CustomerController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/get-customer-name', [CustomerController::class, 'getCustomerName']);
+Route::middleware('auth:sanctum')->get('/customers/balance', [CustomerController::class, 'getCustomerBalance']);
 Route::middleware('auth:sanctum')->put('/update-customer', [CustomerController::class, 'updateCustomer']);
 Route::middleware('auth:sanctum')->post('/update-profile-picture', [CustomerController::class, 'updateProfilePicture']);
 
@@ -44,7 +44,6 @@ Route::get('/orders', [OrderController::class, 'index']);
 Route::get('/orders/today', [OrderController::class, 'todayOrders']);
 Route::post('/orders', [OrderController::class, 'store']);
 Route::patch('/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
-
 
 Route::get('/roles', [RoleController::class, 'index']);
 Route::get('/admins', [AdminController::class, 'index']);

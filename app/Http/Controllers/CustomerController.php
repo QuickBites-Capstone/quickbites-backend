@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Mail\WelcomeCustomer;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Services\ImageService;
+use Illuminate\Support\Facades\Log; 
 
 
 class CustomerController extends Controller
@@ -121,17 +122,20 @@ class CustomerController extends Controller
         ], 200);
     }
 
-    public function getCustomerById($id)
+    public function getCustomerBalanceById($id)
     {
         $customer = Customer::find($id);
-
+    
         if (!$customer) {
             return response()->json(['message' => 'Customer not found'], 404);
         }
-
-        return response()->json($customer, 200);
+    
+        return response()->json([
+            'id' => $customer->id,
+            'balance' => $customer->balance
+        ], 200);
     }
-
+    
     public function addCredits(Request $request, $id)
     {
         $request->validate([
@@ -209,26 +213,6 @@ class CustomerController extends Controller
             'profile_picture_url' => $customer->profile_picture ? $this->imageService->getTemporaryImageUrl($customer->profile_picture) : null,
         ], 200);
     }
-
-    public function updateBalance(Request $request, $customerId)
-    {
-        $customer = Customer::findOrFail($customerId);
-        $balance = $customer->wallet_balance;
-
-        $request->validate([
-            'deduction' => 'required|numeric|min:0',
-        ]);
-
-        if ($balance < $request->deduction) {
-            return response()->json(['message' => 'Insufficient balance.'], 400);
-        }
-
-        $customer->wallet_balance -= $request->deduction;
-        $customer->save();
-
-        return response()->json(['message' => 'Balance updated.', 'balance' => $customer->wallet_balance]);
-    }
-
 
     protected $imageService;
 
