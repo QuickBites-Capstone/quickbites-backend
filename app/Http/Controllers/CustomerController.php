@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Services\ImageService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log; 
 
 
 class CustomerController extends Controller
@@ -124,17 +125,20 @@ class CustomerController extends Controller
         ], 200);
     }
 
-    public function getCustomerById($id)
+    public function getCustomerBalanceById($id)
     {
         $customer = Customer::find($id);
-
+    
         if (!$customer) {
             return response()->json(['message' => 'Customer not found'], 404);
         }
-
-        return response()->json($customer, 200);
+    
+        return response()->json([
+            'id' => $customer->id,
+            'balance' => $customer->balance
+        ], 200);
     }
-
+    
     public function addCredits(Request $request, $id)
     {
         $request->validate([
