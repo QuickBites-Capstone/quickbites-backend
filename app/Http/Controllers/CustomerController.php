@@ -37,6 +37,7 @@ class CustomerController extends Controller
             'phone_number' => 'nullable|string|max:255',
             'password' => 'required|string|min:8|confirmed',
             'profile_picture' => 'nullable|image',
+            'balance' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -49,6 +50,7 @@ class CustomerController extends Controller
             'email' => $request->email,
             'phone_number' => $request->phone_number,
             'password' => Hash::make($request->password),
+            'balance' => $request->input('balance', 0.00),
         ]);
 
         if ($request->hasFile('profile_picture')) {
@@ -62,6 +64,7 @@ class CustomerController extends Controller
         return response()->json([
             'message' => 'Successful registration!',
             'customer' => $customer,
+            'balance' => '₱' . number_format($customer->balance, 2),
             'profile_picture_url' => $customer->profile_picture ? $this->imageService->getTemporaryImageUrl($customer->profile_picture) : null,
         ], 201);
     }
@@ -205,6 +208,25 @@ class CustomerController extends Controller
             'message' => 'Profile picture updated successfully!',
             'profile_picture_url' => $customer->profile_picture ? $this->imageService->getTemporaryImageUrl($customer->profile_picture) : null,
         ], 200);
+    }
+
+    public function updateBalance(Request $request, $customerId)
+    {
+        $customer = Customer::findOrFail($customerId);
+        $balance = $customer->wallet_balance;
+
+        $request->validate([
+            'deduction' => 'required|numeric|min:0',
+        ]);
+
+        if ($balance < $request->deduction) {
+            return response()->json(['message' => 'Insufficient balance.'], 400);
+        }
+
+        $customer->wallet_balance -= $request->deduction;
+        $customer->save();
+
+        return response()->json(['message' => 'Balance updated.', 'balance' => $customer->wallet_balance]);
     }
 
 
