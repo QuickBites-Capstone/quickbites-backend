@@ -42,7 +42,7 @@ class AdminController extends Controller
             'role_id' => $roleId,
         ]);
 
-        Mail::to($request->email)->send(new AdminCredentials($admin, $randomPassword));
+        Mail::to($request->email)->queue(new AdminCredentials($admin, $randomPassword));
 
         return response()->json(['admin' => $admin], 201);
     }

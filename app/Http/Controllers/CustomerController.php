@@ -62,7 +62,7 @@ class CustomerController extends Controller
             $customer->save();
         }
 
-        Mail::to($request->email)->send(new WelcomeCustomer($customer));
+        Mail::to($request->email)->queue(new WelcomeCustomer($customer));
 
         return response()->json([
             'message' => 'Successful registration!',
@@ -248,7 +248,7 @@ class CustomerController extends Controller
             ['otp' => $otp, 'expires_at' => $expiresAt]
         );
 
-        Mail::to($customer->email)->send(new OTP($otp));
+        Mail::to($customer->email)->queue(new OTP($otp));
 
         return response()->json(['message' => 'OTP sent to your email.'], 200);
     }
