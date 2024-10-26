@@ -114,7 +114,7 @@ class CartController extends Controller
     return response()->json($cart->load('cartItems'));
     }
 
-
+    // test new
     public function getCartItems($cartId)
     {
         $cart = Cart::with('cartItems')->findOrFail($cartId);
