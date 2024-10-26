@@ -13,15 +13,21 @@ class SendMessageJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    protected $icon;
+    protected $header;
     protected $message;
+    protected $customerId;
 
-    public function __construct($message)
+    public function __construct($icon, $header, $message, $customerId)
     {
+        $this->icon = $icon;
+        $this->header = $header;
         $this->message = $message;
+        $this->customerId = $customerId;
     }
 
     public function handle()
     {
-        event(new MessageSent($this->message));
+        event(new MessageSent($this->icon, $this->header, $this->message, $this->customerId));
     }
 }
