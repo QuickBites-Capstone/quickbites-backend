@@ -12,106 +12,108 @@ use Illuminate\Http\Request;
 class CartController extends Controller
 {
     public function store(Request $request, $customerId)
-    {
-    
-        $request->validate([
-            'items' => 'sometimes|array',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'total' => 'nullable|integer', 
-            'schedule' => 'nullable|string',
-            'payment_id' => 'nullable|exists:payment_methods,id',
+{
+    $request->validate([
+        'items' => 'sometimes|array',
+        'items.*.product_id' => 'required|exists:products,id',
+        'items.*.quantity' => 'required|integer|min:1',
+        'total' => 'nullable|integer', 
+        'schedule' => 'nullable|string',
+        'payment_id' => 'nullable|exists:payment_methods,id',
+    ]);
+
+    $customer = Customer::findOrFail($customerId);
+
+    $lastCart = $customer->carts()->latest()->first();
+
+    if (!$lastCart || $lastCart->payment_id) {
+        $cart = $customer->carts()->create([
+            'customer_id' => $customer->id,
+            'payment_id' => null,
+            'total' => null,
+            'schedule' => null,
         ]);
-    
-        $customer = Customer::findOrFail($customerId);
-    
-        $lastCart = $customer->carts()->latest()->first();
-    
-        if ($lastCart && $lastCart->payment_id) {
-            $cart = $customer->carts()->create([
-                'customer_id' => $customer->id,
-                'payment_id' => $request->null, 
-                'total' => $request->null,          
-                'schedule' => $request->null,     
-            ]);
-        } else {
-        
-            $cart = $lastCart ?: $customer->carts()->create([
-                'customer_id' => $customer->id,
-                'payment_id' => $request->null,
-                'total' => $request->null,         
-                'schedule' => $request->null,      
-            ]);
+    } else {
+        $cart = $lastCart; 
+    }
+
+    if ($request->has('total')) {
+        $cart->total = $request->total;
+    }
+
+    if ($request->has('schedule')) {
+        $cart->schedule = $request->schedule;
+    }
+
+    if ($request->has('payment_id')) {
+        $cart->payment_id = $request->payment_id;
+    }
+
+    if ($request->payment_id == 1 && $request->has('total')) {
+        $total = (float) $request->total;
+        $balance = (float) $customer->balance;
+
+        Log::info('Processing wallet payment', [
+            'customer_id' => $customer->id,
+            'balance' => $balance,
+            'total' => $total,
+        ]);
+
+        if ($balance < $total) {
+            return response()->json(['message' => 'Insufficient wallet balance.'], 400);
         }
-    
-        if ($request->has('total')) {
-            $cart->total = $request->total;
-        }
-    
-        if ($request->has('schedule')) {
-            $cart->schedule = $request->schedule;
-        }
-    
-        if ($request->has('payment_id')) {
-            $cart->payment_id = $request->payment_id;
-        }
- 
-        if ($request->payment_id == 1 && $request->has('total')) {
-            $total = (float) $request->total;
-            $balance = (float) $customer->balance;
-    
-            Log::info('Processing wallet payment', [
-                'customer_id' => $customer->id,
-                'balance' => $balance,
-                'total' => $total,
-            ]);
-    
-            if ($balance < $total) {
-                return response()->json(['message' => 'Insufficient wallet balance.'], 400);
-            }
-    
-            $customer->balance -= $total;
-            $customer->save();
-        }
-        $cart->save();
-    
-        if ($request->has('items')) {
-            foreach ($request->items as $item) {
-                $cartItem = $cart->cartItems()->where('product_id', $item['product_id'])->first();
-    
-                if ($cartItem) {
-                 
+
+        $customer->balance -= $total;
+        $customer->save();
+    }
+
+    $cart->save();
+
+
+    if ($request->has('items')) {
+        foreach ($request->items as $item) {
+           
+            $cartItem = $cart->cartItems()->where('product_id', $item['product_id'])->first();
+
+            if ($cartItem) {
+              
+                if (!$cart->payment_id) {
                     $cartItem->increment('quantity', $item['quantity']);
                     $cartItem->price = $this->getProductPrice($item['product_id']);
                     $cartItem->save();
-                } else {
-                 
-                    $cart->cartItems()->create([
-                        'product_id' => $item['product_id'],
-                        'quantity' => $item['quantity'],
-                        'price' => $this->getProductPrice($item['product_id']),
-                    ]);
                 }
+            } else {
+              
+                $cart->cartItems()->create([
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $this->getProductPrice($item['product_id']),
+                ]);
             }
         }
-    
-        return response()->json($cart->load('cartItems'), 201);
     }
+
+    return response()->json($cart->load('cartItems'), 201);
+}
     
     
     public function getCart($customerId)
     {
-        $customer = Customer::with('carts.cartItems')->findOrFail($customerId);
-        
-       
-        $cart = $customer->carts()->first();
+    $customer = Customer::with('carts.cartItems')->findOrFail($customerId);
 
-        if (!$cart) {
-            return response()->json(['message' => 'No cart found for the customer'], 404);
-        }
+    $cart = $customer->carts()
+        ->whereNull('total')
+        ->whereNull('schedule')
+        ->whereNull('payment_id')
+        ->first();
 
-        return response()->json($cart->load('cartItems')); 
+    if (!$cart) {
+        return response()->json(['message' => 'No active cart found for the customer'], 404);
     }
+
+    return response()->json($cart->load('cartItems'));
+    }
+
 
     public function getCartItems($cartId)
     {
@@ -156,12 +158,22 @@ class CartController extends Controller
 
     public function clearCart($cartId)
     {
-        $cart = Cart::findOrFail($cartId);
-        $cart->cartItems()->delete(); 
-
-        return response()->json(['message' => 'Cart cleared successfully']);
+       
+        $cart = Cart::with('cartItems')->findOrFail($cartId);
+    
+        if ($cart->total === null && $cart->schedule === null && $cart->payment_id === null) {
+            Log::info('Clearing cart', ['cart' => $cart]);
+    
+            $cart->cartItems()->delete();
+            $cart->delete();
+    
+            return response()->json(['message' => 'Cart cleared and removed successfully']);
+        } else {
+    
+            return response()->json(['message' => 'Cannot clear an inactive cart.'], 400);
+        }
     }
-
+    
     private function getProductPrice($productId)
     {
         return \App\Models\Product::findOrFail($productId)->price;
