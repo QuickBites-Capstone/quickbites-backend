@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Jobs\SendMessageJob;
 
 class OrderController extends Controller
 {
@@ -123,6 +124,7 @@ class OrderController extends Controller
         ]);
 
         $order = Order::findOrFail($id);
+        $customerId = $order->cart->customer->id;
 
         $statusMap = [
             'complete' => 4, // ID for 'Complete' status
@@ -137,8 +139,38 @@ class OrderController extends Controller
             $order->reason_id = $request->input('reason_id');
         }
 
+        $this->handleOrderStatusMessage($order, $request->input('status'), $customerId);
+
         $order->save();
 
         return response()->json($this->formatOrder($order), 200);
+    }
+
+    private function handleOrderStatusMessage(Order $order, string $status, int $customerId)
+    {
+        switch ($status) {
+            case 'ready':
+                $this->dispatchOrderReadyMessage($customerId);
+                break;
+            case 'complete':
+                $this->dispatchOrderCompleteMessage($customerId);
+                break;
+        }
+    }
+
+    private function dispatchOrderReadyMessage(int $customerId)
+    {
+        $icon = "mdi-alarm";
+        $header = "Your order is ready!";
+        $message = "Your order is now prepared and ready for pickup. Please collect it at your earliest convenience.";
+        SendMessageJob::dispatch($icon, $header, $message, $customerId);
+    }
+
+    private function dispatchOrderCompleteMessage(int $customerId)
+    {
+        $icon = "mdi-party-popper";
+        $header = "Thank You!";
+        $message = "You've got your order in hand! We hope you enjoy it and can't wait to see you again soon!";
+        SendMessageJob::dispatch($icon, $header, $message, $customerId);
     }
 }
