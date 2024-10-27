@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    // Get all notifications for a specific user
     public function index(Request $request)
     {
         $userId = $request->query('customer_id');
@@ -23,6 +22,7 @@ class NotificationController extends Controller
                 'id' => $notification->id,
                 'message' => $notification->message,
                 'is_read' => $notification->is_read,
+                'order_id' => $notification->order_id,
                 'order_number' => $notification->order ? $notification->order->order_number : null,
                 'created_at' => $notification->created_at,
             ];

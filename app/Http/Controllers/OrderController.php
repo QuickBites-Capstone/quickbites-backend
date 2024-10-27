@@ -7,8 +7,9 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Enums\OrderStatus;
 use App\Jobs\SendMessageJob;
+use App\Jobs\SendNotificationJob;
 use App\Http\Services\ImageService;
-use App\Jobs\BroadcastNewOrder;
+use App\Models\Notification;
 
 class OrderController extends Controller
 {
@@ -153,27 +154,45 @@ class OrderController extends Controller
     {
         switch ($status) {
             case 'ready':
-                $this->dispatchOrderReadyMessage($customerId);
+                $this->dispatchOrderReadyMessage($order, $customerId);
                 break;
             case 'complete':
-                $this->dispatchOrderCompleteMessage($customerId);
+                $this->dispatchOrderCompleteMessage($order, $customerId);
                 break;
         }
     }
 
-    private function dispatchOrderReadyMessage(int $customerId)
+    private function dispatchOrderReadyMessage(Order $order, int $customerId)
     {
         $icon = "mdi-alarm";
         $header = "Your order is ready!";
         $message = "Your order is now prepared and ready for pickup. Please collect it at your earliest convenience.";
+
+        // Create notification
+        $notification = Notification::create([
+            'order_id' => $order->id,
+            'message' => 'Your order is ready for pick-up!',
+            'is_read' => false,
+        ]);
+
+        SendNotificationJob::dispatch($notification);
         SendMessageJob::dispatch($icon, $header, $message, $customerId);
     }
 
-    private function dispatchOrderCompleteMessage(int $customerId)
+    private function dispatchOrderCompleteMessage(Order $order, int $customerId)
     {
         $icon = "mdi-party-popper";
         $header = "Thank You!";
         $message = "You've got your order in hand! We hope you enjoy it and can't wait to see you again soon!";
+
+        // Create notification
+        $notification = Notification::create([
+            'order_id' => $order->id,
+            'message' => 'Thank you for ordering!',
+            'is_read' => false,
+        ]);
+
+        SendNotificationJob::dispatch($notification);
         SendMessageJob::dispatch($icon, $header, $message, $customerId);
     }
 
