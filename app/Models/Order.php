@@ -37,4 +37,6 @@ class Order extends Model
     {
         return $this->belongsTo(Reason::class);
     }
+
+    public $timestamps = true;
 }

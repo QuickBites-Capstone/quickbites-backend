@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Enums\OrderStatus;
 use App\Jobs\SendMessageJob;
+use App\Http\Services\ImageService;
 use App\Jobs\BroadcastNewOrder;
 
 class OrderController extends Controller
@@ -188,10 +189,20 @@ class OrderController extends Controller
             ->get()
             ->map(function ($order) {
                 $order->status_label = OrderStatus::from($order->order_status_id)->name;
+
+                $order->cart->cartItems->map(function ($cartItem) {
+                    $product = $cartItem->product;
+
+                    $product->image_url = $product->image
+                        ? $this->imageService->getTemporaryImageUrl($product->image)
+                        : null;
+
+                    return $cartItem;
+                });
+
                 return $order;
             });
 
-        // Debugging
         if ($orders->isEmpty()) {
             return response()->json(['message' => 'No orders found for this customer'], 404);
         }
@@ -210,11 +221,17 @@ class OrderController extends Controller
             })
             ->get();
 
-        // Debugging
         if ($orders->isEmpty()) {
             return response()->json(['message' => 'No orders found for this customer'], 404);
         }
 
         return response()->json($orders);
+    }
+
+    protected $imageService;
+
+    public function __construct(ImageService $imageService)
+    {
+        $this->imageService = $imageService;
     }
 }
