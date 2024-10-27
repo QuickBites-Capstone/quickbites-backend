@@ -50,6 +50,8 @@ Route::get('/orders', [OrderController::class, 'index']);
 Route::get('/orders/today', [OrderController::class, 'todayOrders']);
 Route::post('/orders', [OrderController::class, 'store']);
 Route::patch('/orders/{id}/status', [OrderController::class, 'updateOrderStatus']);
+Route::get('/customers/{customerId}/orders/inactive', [OrderController::class, 'getOrdersWithInactiveCart']);
+
 
 Route::get('/roles', [RoleController::class, 'index']);
 Route::get('/admins', [AdminController::class, 'index']);

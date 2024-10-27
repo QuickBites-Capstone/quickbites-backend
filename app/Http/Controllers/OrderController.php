@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Enums\OrderStatus;
 use App\Jobs\SendMessageJob;
 use App\Jobs\BroadcastNewOrder;
 
@@ -174,4 +175,48 @@ class OrderController extends Controller
         $message = "You've got your order in hand! We hope you enjoy it and can't wait to see you again soon!";
         SendMessageJob::dispatch($icon, $header, $message, $customerId);
     }
+
+    public function getOrdersWithInactiveCart($customerId)
+    {
+        $orders = Order::with('cart', 'cart.cartItems.product')
+            ->whereHas('cart', function ($query) use ($customerId) {
+                $query->where('customer_id', $customerId)
+                      ->whereNotNull('total')
+                      ->whereNotNull('schedule')
+                      ->whereNotNull('payment_id');
+            })
+            ->get()
+            ->map(function ($order){
+                $order->status_label = OrderStatus::from($order->order_status_id)->name;
+                return $order;
+            });
+    
+        // Debugging
+        if ($orders->isEmpty()) {
+            return response()->json(['message' => 'No orders found for this customer'], 404);
+        }
+    
+        return response()->json($orders);
+    }
+    public function getCompleteOrders($customerId)
+    {
+        $orders = Order::with('cart', 'cart.cartItems')
+            ->where('order_status_id', OrderStatus::Complete->value)
+            ->whereHas('cart', function ($query) use ($customerId) {
+                $query->where('customer_id', $customerId)
+                      ->whereNotNull('total')
+                      ->whereNotNull('schedule')
+                      ->whereNotNull('payment_id');
+            })
+            ->get();
+    
+        // Debugging
+        if ($orders->isEmpty()) {
+            return response()->json(['message' => 'No orders found for this customer'], 404);
+        }
+    
+        return response()->json($orders);
+    }
+    
+
 }
