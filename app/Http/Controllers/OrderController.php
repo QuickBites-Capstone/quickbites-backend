@@ -181,42 +181,40 @@ class OrderController extends Controller
         $orders = Order::with('cart', 'cart.cartItems.product')
             ->whereHas('cart', function ($query) use ($customerId) {
                 $query->where('customer_id', $customerId)
-                      ->whereNotNull('total')
-                      ->whereNotNull('schedule')
-                      ->whereNotNull('payment_id');
+                    ->whereNotNull('total')
+                    ->whereNotNull('schedule')
+                    ->whereNotNull('payment_id');
             })
             ->get()
-            ->map(function ($order){
+            ->map(function ($order) {
                 $order->status_label = OrderStatus::from($order->order_status_id)->name;
                 return $order;
             });
-    
+
         // Debugging
         if ($orders->isEmpty()) {
             return response()->json(['message' => 'No orders found for this customer'], 404);
         }
-    
+
         return response()->json($orders);
     }
     public function getCompleteOrders($customerId)
     {
         $orders = Order::with('cart', 'cart.cartItems')
-            ->where('order_status_id', OrderStatus::Complete->value)
+            ->where('order_status_id', OrderStatus::Completed->value)
             ->whereHas('cart', function ($query) use ($customerId) {
                 $query->where('customer_id', $customerId)
-                      ->whereNotNull('total')
-                      ->whereNotNull('schedule')
-                      ->whereNotNull('payment_id');
+                    ->whereNotNull('total')
+                    ->whereNotNull('schedule')
+                    ->whereNotNull('payment_id');
             })
             ->get();
-    
+
         // Debugging
         if ($orders->isEmpty()) {
             return response()->json(['message' => 'No orders found for this customer'], 404);
         }
-    
+
         return response()->json($orders);
     }
-    
-
 }
