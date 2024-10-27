@@ -173,4 +173,20 @@ class OrderController extends Controller
         $message = "You've got your order in hand! We hope you enjoy it and can't wait to see you again soon!";
         SendMessageJob::dispatch($icon, $header, $message, $customerId);
     }
+
+    public function getOrdersWithInactiveCart($customerId)
+{
+    
+    $orders = Order::with('cart', 'cart.cartItems')
+        ->whereHas('cart', function ($query) use ($customerId) {
+            $query->where('customer_id', $customerId) 
+                  ->whereNotNull('total')            
+                  ->whereNotNull('schedule')         
+                  ->whereNotNull('payment_id');      
+        })
+        ->get();
+
+    return response()->json($orders);
+}
+
 }

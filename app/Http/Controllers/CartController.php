@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\CartItem;
+use App\Models\Order;
 use Illuminate\Support\Facades\Log; 
-
+use App\Events\MessageSent;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -93,7 +94,19 @@ class CartController extends Controller
         }
     }
 
-    return response()->json($cart->load('cartItems'), 201);
+    $order = Order::create([
+        'order_number' => uniqid('ORD-'),
+        'cart_id' => $cart->id,
+        'order_status_id' => 1, 
+        'reason_id' => $request->input('reason_id') 
+    ]);
+    
+    MessageSent::dispatch($order);
+
+    return response()->json([
+        'cart' => $cart->load('cartItems'),
+        'order' => $order,
+    ]);
 }
     
     
