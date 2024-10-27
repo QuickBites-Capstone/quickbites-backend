@@ -7,8 +7,9 @@ use App\Models\Customer;
 use App\Models\CartItem;
 use App\Models\Order;
 use Illuminate\Support\Facades\Log; 
-use App\Events\MessageSent;
+use App\Jobs\BroadcastNewOrder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CartController extends Controller
 {
@@ -94,18 +95,24 @@ class CartController extends Controller
         }
     }
 
-    $order = Order::create([
-        'order_number' => uniqid('ORD-'),
-        'cart_id' => $cart->id,
-        'order_status_id' => 1, 
-        'reason_id' => $request->input('reason_id') 
-    ]);
-    
-    MessageSent::dispatch($order);
+    if ($cart->total !== null && $cart->payment_id !== null && $cart->schedule !== null) {
+        $order = Order::create([
+            'order_number' => 'ORD-' . Str::random(5),
+            'cart_id' => $cart->id,
+            'order_status_id' => 1,
+            'reason_id' => $request->input('reason_id')
+        ]);
 
+        dispatch(new BroadcastNewOrder($order));
+
+        return response()->json([
+            'cart' => $cart->load('cartItems'),
+            'order' => $order,
+        ]);
+    }
     return response()->json([
         'cart' => $cart->load('cartItems'),
-        'order' => $order,
+        'message' => 'Cart updated. Please finalize the cart to create an order.',
     ]);
 }
     
