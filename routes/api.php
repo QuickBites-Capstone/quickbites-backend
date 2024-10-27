@@ -10,6 +10,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReasonController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\MessageController;
 
 Route::get('/products', [ProductController::class, 'getProductsByCategory']);
 Route::get('/products/all', [ProductController::class, 'index']);
@@ -57,6 +58,8 @@ Route::post('/admin/login', [AdminController::class, 'login']);
 Route::post('/admin/register', [AdminController::class, 'register']);
 Route::middleware('auth:sanctum')->get('/get-admin-name', [AdminController::class, 'getAdminName']);
 Route::middleware('auth:sanctum')->post('/admin/logout', [AdminController::class, 'logout']);
+
+Route::post('/send-message', [MessageController::class, 'sendMessage']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();
