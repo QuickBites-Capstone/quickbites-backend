@@ -6,6 +6,7 @@ use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Jobs\SendMessageJob;
+use App\Jobs\BroadcastNewOrder;
 
 class OrderController extends Controller
 {
