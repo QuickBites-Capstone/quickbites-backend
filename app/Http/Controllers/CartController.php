@@ -14,108 +14,139 @@ use Illuminate\Support\Str;
 class CartController extends Controller
 {
     public function store(Request $request, $customerId)
-    {
-        $request->validate([
-            'items' => 'sometimes|array',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'total' => 'nullable|integer',
-            'schedule' => 'nullable|string',
-            'payment_id' => 'nullable|exists:payment_methods,id',
-        ]);
+{
+    $this->validateRequest($request);
 
-        $customer = Customer::findOrFail($customerId);
+    $customer = Customer::findOrFail($customerId);
+    $cart = $this->getOrCreateCart($customer);
 
-        $lastCart = $customer->carts()->latest()->first();
+    $this->updateCartAttributes($cart, $request);
 
-        if (!$lastCart || $lastCart->payment_id) {
-            $cart = $customer->carts()->create([
-                'customer_id' => $customer->id,
-                'payment_id' => null,
-                'total' => null,
-                'schedule' => null,
-            ]);
-        } else {
-            $cart = $lastCart;
-        }
+    if ($this->processWalletPayment($request, $customer, $cart) === false) {
+        return response()->json(['message' => 'Insufficient wallet balance.'], 400);
+    }
 
-        if ($request->has('total')) {
-            $cart->total = $request->total;
-        }
+    $this->updateCartItems($cart, $request->input('items', []));
 
-        if ($request->has('schedule')) {
-            $cart->schedule = $request->schedule;
-        }
+    if ($this->shouldCreateOrder($cart)) {
+        $order = $this->createOrder($cart, $request->input('reason_id'));
+        dispatch(new BroadcastNewOrder($order));
 
-        if ($request->has('payment_id')) {
-            $cart->payment_id = $request->payment_id;
-        }
-
-        if ($request->payment_id == 1 && $request->has('total')) {
-            $total = (float) $request->total;
-            $balance = (float) $customer->balance;
-
-            Log::info('Processing wallet payment', [
-                'customer_id' => $customer->id,
-                'balance' => $balance,
-                'total' => $total,
-            ]);
-
-            if ($balance < $total) {
-                return response()->json(['message' => 'Insufficient wallet balance.'], 400);
-            }
-
-            $customer->balance -= $total;
-            $customer->save();
-        }
-
-        $cart->save();
-
-
-        if ($request->has('items')) {
-            foreach ($request->items as $item) {
-
-                $cartItem = $cart->cartItems()->where('product_id', $item['product_id'])->first();
-
-                if ($cartItem) {
-
-                    if (!$cart->payment_id) {
-                        $cartItem->increment('quantity', $item['quantity']);
-                        $cartItem->price = $this->getProductPrice($item['product_id']);
-                        $cartItem->save();
-                    }
-                } else {
-
-                    $cart->cartItems()->create([
-                        'product_id' => $item['product_id'],
-                        'quantity' => $item['quantity'],
-                        'price' => $this->getProductPrice($item['product_id']),
-                    ]);
-                }
-            }
-        }
-
-        if ($cart->total !== null && $cart->payment_id !== null && $cart->schedule !== null) {
-            $order = Order::create([
-                'order_number' => 'ORD-' . Str::random(5),
-                'cart_id' => $cart->id,
-                'order_status_id' => 1,
-                'reason_id' => $request->input('reason_id')
-            ]);
-
-            dispatch(new BroadcastNewOrder($order));
-
-            return response()->json([
-                'cart' => $cart->load('cartItems'),
-                'order' => $order,
-            ]);
-        }
         return response()->json([
             'cart' => $cart->load('cartItems'),
-            'message' => 'Cart updated. Please finalize the cart to create an order.',
+            'order' => $order,
         ]);
     }
 
+    return response()->json([
+        'cart' => $cart->load('cartItems'),
+        'message' => 'Cart updated. Please finalize the cart to create an order.',
+    ]);
+}
+
+private function validateRequest(Request $request)
+{
+    $request->validate([
+        'items' => 'sometimes|array',
+        'items.*.product_id' => 'required|exists:products,id',
+        'items.*.quantity' => 'required|integer|min:1',
+        'total' => 'nullable|integer',
+        'schedule' => 'nullable|string',
+        'payment_id' => 'nullable|exists:payment_methods,id',
+    ]);
+}
+
+private function getOrCreateCart(Customer $customer)
+{
+    $lastCart = $customer->carts()->latest()->first();
+
+    if (!$lastCart || $lastCart->payment_id) {
+        return $customer->carts()->create([
+            'customer_id' => $customer->id,
+            'payment_id' => null,
+            'total' => null,
+            'schedule' => null,
+        ]);
+    }
+
+    return $lastCart;
+}
+
+private function updateCartAttributes($cart, Request $request)
+{
+    if ($request->has('total')) {
+        $cart->total = $request->total;
+    }
+
+    if ($request->has('schedule')) {
+        $cart->schedule = $request->schedule;
+    }
+
+    if ($request->has('payment_id')) {
+        $cart->payment_id = $request->payment_id;
+    }
+
+    $cart->save();
+}
+
+private function processWalletPayment(Request $request, Customer $customer, $cart)
+{
+    if ($request->payment_id == 1 && $request->has('total')) {
+        $total = (float) $request->total;
+        $balance = (float) $customer->balance;
+
+        Log::info('Processing wallet payment', [
+            'customer_id' => $customer->id,
+            'balance' => $balance,
+            'total' => $total,
+        ]);
+
+        if ($balance < $total) {
+            return false;
+        }
+
+        $customer->balance -= $total;
+        $customer->save();
+    }
+
+    return true;
+}
+
+private function updateCartItems($cart, array $items)
+{
+    foreach ($items as $item) {
+        $cartItem = $cart->cartItems()->where('product_id', $item['product_id'])->first();
+
+        if ($cartItem) {
+            if (!$cart->payment_id) {
+                $cartItem->increment('quantity', $item['quantity']);
+                $cartItem->price = $this->getProductPrice($item['product_id']);
+                $cartItem->save();
+            }
+        } else {
+            $cart->cartItems()->create([
+                'product_id' => $item['product_id'],
+                'quantity' => $item['quantity'],
+                'price' => $this->getProductPrice($item['product_id']),
+            ]);
+        }
+    }
+}
+
+private function shouldCreateOrder($cart)
+{
+    return $cart->total !== null && $cart->payment_id !== null && $cart->schedule !== null;
+}
+
+private function createOrder($cart, $reasonId)
+{
+    return Order::create([
+        'order_number' => 'ORD-' . Str::random(5),
+        'cart_id' => $cart->id,
+        'order_status_id' => 1,
+        'reason_id' => $reasonId,
+    ]);
+}
 
     public function getCart($customerId)
     {
@@ -134,7 +165,7 @@ class CartController extends Controller
         return response()->json($cart->load('cartItems'));
     }
 
-    // test new
+
     public function getCartItems($cartId)
     {
         $cart = Cart::with('cartItems')->findOrFail($cartId);

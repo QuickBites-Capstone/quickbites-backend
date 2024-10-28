@@ -12,6 +12,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Middleware\AdminRoleMiddleware;
 
 Route::get('/products', [ProductController::class, 'getProductsByCategory']);
 Route::get('/products/all', [ProductController::class, 'index']);
@@ -56,9 +57,11 @@ Route::get('/customers/{customerId}/orders/inactive', [OrderController::class, '
 
 Route::get('/roles', [RoleController::class, 'index']);
 Route::get('/admins', [AdminController::class, 'index']);
-Route::delete('/admins/{id}', [AdminController::class, 'destroy']);
+Route::middleware(['auth:sanctum', AdminRoleMiddleware::class . ':admin'])->group(function(){
+    Route::post('/admin/register', [AdminController::class, 'register']);
+    Route::delete('/admins/{id}', [AdminController::class, 'destroy']);
+});
 Route::post('/admin/login', [AdminController::class, 'login']);
-Route::post('/admin/register', [AdminController::class, 'register']);
 Route::middleware('auth:sanctum')->get('/get-admin-name', [AdminController::class, 'getAdminName']);
 Route::middleware('auth:sanctum')->post('/admin/logout', [AdminController::class, 'logout']);
 
