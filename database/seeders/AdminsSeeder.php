@@ -14,9 +14,9 @@ class AdminsSeeder extends Seeder
 
         DB::table('admins')->insert([
             [
-                'first_name' => 'Joshua',
-                'last_name' => 'Paulo',
-                'email' => 'joshua@gmail.com',
+                'first_name' => 'Joshua Paulo',
+                'last_name' => 'Ynzon',
+                'email' => 'joshuapauloynzon@gmail.com',
                 'password' => bcrypt('gwapo123'),
                 'role_id' => 1,
                 'created_at' => $now,
@@ -25,7 +25,16 @@ class AdminsSeeder extends Seeder
             [
                 'first_name' => 'Charles',
                 'last_name' => 'Casenas',
-                'email' => 'charles@gmail.com',
+                'email' => 'casenascharles@gmail.com',
+                'password' => bcrypt('gwapo123'),
+                'role_id' => 1,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'first_name' => 'Canteen',
+                'last_name' => 'Staff',
+                'email' => 'canteenstaff@quickbites.com',
                 'password' => bcrypt('gwapo123'),
                 'role_id' => 2,
                 'created_at' => $now,
