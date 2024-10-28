@@ -10,39 +10,46 @@ use Illuminate\Support\Facades\Log;
 use App\Jobs\BroadcastNewOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Models\Product;
+use App\Enums\ProductStatus;
 
 class CartController extends Controller
 {
     public function store(Request $request, $customerId)
-{
-    $this->validateRequest($request);
-
-    $customer = Customer::findOrFail($customerId);
-    $cart = $this->getOrCreateCart($customer);
-
-    $this->updateCartAttributes($cart, $request);
-
-    if ($this->processWalletPayment($request, $customer, $cart) === false) {
-        return response()->json(['message' => 'Insufficient wallet balance.'], 400);
-    }
-
-    $this->updateCartItems($cart, $request->input('items', []));
-
-    if ($this->shouldCreateOrder($cart)) {
-        $order = $this->createOrder($cart, $request->input('reason_id'));
-        dispatch(new BroadcastNewOrder($order));
-
+    {
+        $this->validateRequest($request);
+    
+        $customer = Customer::findOrFail($customerId);
+        $cart = $this->getOrCreateCart($customer);
+    
+        $this->updateCartAttributes($cart, $request);
+    
+        if ($this->processWalletPayment($request, $customer, $cart) === false) {
+            return response()->json(['message' => 'Insufficient wallet balance.'], 400);
+        }
+    
+        try {
+            $this->updateCartItems($cart, $request->input('items', []));
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+    
+        if ($this->shouldCreateOrder($cart)) {
+            $order = $this->createOrder($cart, $request->input('reason_id'));
+            dispatch(new BroadcastNewOrder($order));
+    
+            return response()->json([
+                'cart' => $cart->load('cartItems'),
+                'order' => $order,
+            ]);
+        }
+    
         return response()->json([
             'cart' => $cart->load('cartItems'),
-            'order' => $order,
+            'message' => 'Cart updated. Please finalize the cart to create an order.',
         ]);
     }
-
-    return response()->json([
-        'cart' => $cart->load('cartItems'),
-        'message' => 'Cart updated. Please finalize the cart to create an order.',
-    ]);
-}
+    
 
 private function validateRequest(Request $request)
 {
@@ -115,15 +122,25 @@ private function processWalletPayment(Request $request, Customer $customer, $car
 private function updateCartItems($cart, array $items)
 {
     foreach ($items as $item) {
+        $product = Product::findOrFail($item['product_id']); 
+
+      
+        if ($item['quantity'] > $product->stock_quantity) { 
+           
+            throw new \Exception("Insufficient stock for product ID {$item['product_id']}. Available: {$product->stock_quantity}");
+        }
+
         $cartItem = $cart->cartItems()->where('product_id', $item['product_id'])->first();
 
         if ($cartItem) {
             if (!$cart->payment_id) {
+             
                 $cartItem->increment('quantity', $item['quantity']);
                 $cartItem->price = $this->getProductPrice($item['product_id']);
                 $cartItem->save();
             }
         } else {
+         
             $cart->cartItems()->create([
                 'product_id' => $item['product_id'],
                 'quantity' => $item['quantity'],
@@ -133,6 +150,8 @@ private function updateCartItems($cart, array $items)
     }
 }
 
+
+
 private function shouldCreateOrder($cart)
 {
     return $cart->total !== null && $cart->payment_id !== null && $cart->schedule !== null;
@@ -140,13 +159,27 @@ private function shouldCreateOrder($cart)
 
 private function createOrder($cart, $reasonId)
 {
-    return Order::create([
+   
+    $order = Order::create([
         'order_number' => 'ORD-' . Str::random(5),
         'cart_id' => $cart->id,
         'order_status_id' => 1,
         'reason_id' => $reasonId,
     ]);
+
+    foreach ($cart->cartItems as $cartItem) {
+        $product = Product::findOrFail($cartItem->product_id);
+        $product->stock_quantity -= $cartItem->quantity;
+
+        if ($product->stock_quantity <= 0) {
+            $product->status_id = ProductStatus::SoldOut->value;
+        }
+        $product->save();
+    }
+
+    return $order;
 }
+
 
     public function getCart($customerId)
     {
