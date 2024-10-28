@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Enums\OrderStatus;
 use App\Jobs\SendMessageJob;
+use App\Jobs\SendNotificationJob;
+use App\Http\Services\ImageService;
+use App\Models\Notification;
 
 class OrderController extends Controller
 {
@@ -150,27 +154,103 @@ class OrderController extends Controller
     {
         switch ($status) {
             case 'ready':
-                $this->dispatchOrderReadyMessage($customerId);
+                $this->dispatchOrderReadyMessage($order, $customerId);
                 break;
             case 'complete':
-                $this->dispatchOrderCompleteMessage($customerId);
+                $this->dispatchOrderCompleteMessage($order, $customerId);
                 break;
         }
     }
 
-    private function dispatchOrderReadyMessage(int $customerId)
+    private function dispatchOrderReadyMessage(Order $order, int $customerId)
     {
         $icon = "mdi-alarm";
         $header = "Your order is ready!";
         $message = "Your order is now prepared and ready for pickup. Please collect it at your earliest convenience.";
+
+        // Create notification
+        $notification = Notification::create([
+            'order_id' => $order->id,
+            'message' => 'Your order is ready for pick-up!',
+            'is_read' => false,
+        ]);
+
+        SendNotificationJob::dispatch($notification);
         SendMessageJob::dispatch($icon, $header, $message, $customerId);
     }
 
-    private function dispatchOrderCompleteMessage(int $customerId)
+    private function dispatchOrderCompleteMessage(Order $order, int $customerId)
     {
         $icon = "mdi-party-popper";
         $header = "Thank You!";
         $message = "You've got your order in hand! We hope you enjoy it and can't wait to see you again soon!";
+
+        // Create notification
+        $notification = Notification::create([
+            'order_id' => $order->id,
+            'message' => 'Thank you for ordering!',
+            'is_read' => false,
+        ]);
+
+        SendNotificationJob::dispatch($notification);
         SendMessageJob::dispatch($icon, $header, $message, $customerId);
+    }
+
+    public function getOrdersWithInactiveCart($customerId)
+    {
+        $orders = Order::with('cart', 'cart.cartItems.product')
+            ->whereHas('cart', function ($query) use ($customerId) {
+                $query->where('customer_id', $customerId)
+                    ->whereNotNull('total')
+                    ->whereNotNull('schedule')
+                    ->whereNotNull('payment_id');
+            })
+            ->get()
+            ->map(function ($order) {
+                $order->status_label = OrderStatus::from($order->order_status_id)->name;
+
+                $order->cart->cartItems->map(function ($cartItem) {
+                    $product = $cartItem->product;
+
+                    $product->image_url = $product->image
+                        ? $this->imageService->getTemporaryImageUrl($product->image)
+                        : null;
+
+                    return $cartItem;
+                });
+
+                return $order;
+            });
+
+        if ($orders->isEmpty()) {
+            return response()->json(['message' => 'No orders found for this customer'], 404);
+        }
+
+        return response()->json($orders);
+    }
+    public function getCompleteOrders($customerId)
+    {
+        $orders = Order::with('cart', 'cart.cartItems')
+            ->where('order_status_id', OrderStatus::Completed->value)
+            ->whereHas('cart', function ($query) use ($customerId) {
+                $query->where('customer_id', $customerId)
+                    ->whereNotNull('total')
+                    ->whereNotNull('schedule')
+                    ->whereNotNull('payment_id');
+            })
+            ->get();
+
+        if ($orders->isEmpty()) {
+            return response()->json(['message' => 'No orders found for this customer'], 404);
+        }
+
+        return response()->json($orders);
+    }
+
+    protected $imageService;
+
+    public function __construct(ImageService $imageService)
+    {
+        $this->imageService = $imageService;
     }
 }

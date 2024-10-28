@@ -33,45 +33,50 @@ class CustomerController extends Controller
     }
 
     public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|max:255',
-            'phone_number' => 'nullable|string|max:255',
-            'password' => 'required|string|min:8|confirmed',
-            'profile_picture' => 'nullable|image',
-            'balance' => 'nullable|numeric|min:0',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'email' => 'required|string|max:255|email|unique:customers,email',
+        'phone_number' => 'nullable|string|max:255',
+        'password' => 'required|string|min:8|confirmed',
+        'profile_picture' => 'nullable|image',
+        'balance' => 'nullable|numeric|min:0',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors'  => $validator->errors()], 422);
-        }
-
-        $customer = Customer::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'phone_number' => $request->phone_number,
-            'password' => Hash::make($request->password),
-            'balance' => $request->input('balance', 0.00),
-        ]);
-
-        if ($request->hasFile('profile_picture')) {
-            $imagePath = $this->imageService->storeImage($request->file('profile_picture'), 'customers');
-            $customer->profile_picture = $imagePath;
-            $customer->save();
-        }
-
-        Mail::to($request->email)->queue(new WelcomeCustomer($customer));
-
-        return response()->json([
-            'message' => 'Successful registration!',
-            'customer' => $customer,
-            'balance' => '₱' . number_format($customer->balance, 2),
-            'profile_picture_url' => $customer->profile_picture ? $this->imageService->getTemporaryImageUrl($customer->profile_picture) : null,
-        ], 201);
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
     }
+
+    $customer = Customer::create([
+        'first_name' => $request->first_name,
+        'last_name' => $request->last_name,
+        'email' => $request->email,
+        'phone_number' => $request->phone_number,
+        'password' => Hash::make($request->password),
+        'balance' => $request->input('balance', 0.00),
+    ]);
+
+    if ($request->hasFile('profile_picture')) {
+        $imagePath = $this->imageService->storeImage($request->file('profile_picture'), 'customers');
+        $customer->profile_picture = $imagePath;
+        $customer->save();
+    }
+
+    Mail::to($request->email)->queue(new WelcomeCustomer($customer));
+
+   
+    $token = $customer->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'message' => 'Successful registration!',
+        'customer' => $customer,
+        'token' => $token,  
+        'balance' => '₱' . number_format($customer->balance, 2),
+        'profile_picture_url' => $customer->profile_picture ? $this->imageService->getTemporaryImageUrl($customer->profile_picture) : null,
+    ], 201);
+}
+
 
     public function login(Request $request)
     {
