@@ -15,7 +15,7 @@ class NotificationController extends Controller
             ->whereHas('order.cart', function ($query) use ($userId) {
                 $query->where('customer_id', $userId);
             })
-            ->paginate(6);
+            ->get();
 
         $notifications = $notifications->map(function ($notification) {
             return [
