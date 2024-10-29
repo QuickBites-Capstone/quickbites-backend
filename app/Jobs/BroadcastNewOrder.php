@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class BroadcastNewOrder implements ShouldQueue
+class BroadcastNewOrder
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
