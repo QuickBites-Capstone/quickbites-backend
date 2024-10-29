@@ -34,7 +34,7 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = 10;
+        $perPage = 5;
 
         $products = Product::with('category')
             ->orderBy('id', 'asc')
