@@ -9,7 +9,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class SendMessageJob implements ShouldQueue
+class SendMessageJob
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
