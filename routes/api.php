@@ -12,7 +12,10 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SearchController;
 use App\Http\Middleware\AdminRoleMiddleware;
+
+Route::get('/search', [SearchController::class, 'search']);
 
 Route::get('/products', [ProductController::class, 'getProductsByCategory']);
 Route::get('/products/all', [ProductController::class, 'index']);
