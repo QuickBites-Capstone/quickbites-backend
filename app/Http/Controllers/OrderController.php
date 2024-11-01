@@ -10,6 +10,8 @@ use App\Jobs\SendMessageJob;
 use App\Jobs\SendNotificationJob;
 use App\Http\Services\ImageService;
 use App\Models\Notification;
+use App\Events\NotificationCreated;
+use App\Events\MessageSent;
 
 class OrderController extends Controller
 {
@@ -175,8 +177,8 @@ class OrderController extends Controller
             'is_read' => false,
         ]);
 
-        SendNotificationJob::dispatch($notification);
-        SendMessageJob::dispatch($icon, $header, $message, $customerId);
+        event(new NotificationCreated($notification));
+        event(new MessageSent($icon, $header, $message, $customerId));
     }
 
     private function dispatchOrderCompleteMessage(Order $order, int $customerId)
@@ -192,8 +194,8 @@ class OrderController extends Controller
             'is_read' => false,
         ]);
 
-        SendNotificationJob::dispatch($notification);
-        SendMessageJob::dispatch($icon, $header, $message, $customerId);
+        event(new NotificationCreated($notification));
+        event(new MessageSent($icon, $header, $message, $customerId));
     }
 
     public function getOrdersWithInactiveCart($customerId)
