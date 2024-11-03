@@ -18,16 +18,15 @@ class OrderController extends Controller
     public function index()
     {
         return Order::with([
-            'cart?.customer',
-            'cart?.cartItems?.product',
-            'cart?.paymentMethod',
+            'cart.customer',
+            'cart.cartItems.product',
+            'cart.paymentMethod',
             'orderStatus',
             'reason'
         ])->get()->map(function ($order) {
             return $this->formatOrder($order);
         });
     }
-
     public function todayOrders()
     {
         $today = Carbon::today();
