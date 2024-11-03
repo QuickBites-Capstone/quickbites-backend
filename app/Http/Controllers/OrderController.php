@@ -27,6 +27,7 @@ class OrderController extends Controller
             return $this->formatOrder($order);
         });
     }
+
     public function todayOrders()
     {
         $today = Carbon::today();
