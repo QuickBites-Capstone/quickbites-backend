@@ -26,6 +26,7 @@ class CustomerController extends Controller
             ->orWhereRaw('LOWER(CONCAT(first_name, " ", last_name)) LIKE ?', ["%$query%"])
             ->orWhereRaw('LOWER(CONCAT(last_name, " ", first_name)) LIKE ?', ["%$query%"])
             ->orWhereRaw('LOWER(email) LIKE ?', ["%$query%"])
+            ->orWhereRaw('phone_number LIKE ?', ["%$query%"])
             ->get();
 
         $customers->each(function ($customer) {
@@ -160,6 +161,23 @@ class CustomerController extends Controller
 
         return response()->json([
             'message' => 'Credits added successfully',
+            'balance' => $customer->balance,
+        ]);
+    }
+
+    public function deductCredits(Request $request, $id)
+    {
+        $request->validate([
+            'amount' => 'required|integer|min:1',
+        ]);
+
+        $customer = Customer::findOrFail($id);
+
+        $customer->balance -= $request->input('amount');
+        $customer->save();
+
+        return response()->json([
+            'message' => 'Credits deducted successfully',
             'balance' => $customer->balance,
         ]);
     }

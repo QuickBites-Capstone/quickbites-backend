@@ -34,6 +34,7 @@ Route::get('/categories/{categoryId}/products', [CategoryController::class, 'get
 
 Route::get('/customers', [CustomerController::class, 'search']);
 Route::post('/customers/{id}/add-credits', [CustomerController::class, 'addCredits']);
+Route::post('/customers/{id}/deduct-credits', [CustomerController::class, 'deductCredits']);
 Route::get('/customers/{id}', [CustomerController::class, 'getCustomerBalanceById']);
 Route::put('customer/{customerId}/balance', [CustomerController::class, 'updateBalance']);
 Route::post('/register', [CustomerController::class, 'register']);
@@ -60,7 +61,7 @@ Route::get('/customers/{customerId}/orders/inactive', [OrderController::class, '
 
 Route::get('/roles', [RoleController::class, 'index']);
 Route::get('/admins', [AdminController::class, 'index']);
-Route::middleware(['auth:sanctum', AdminRoleMiddleware::class . ':admin'])->group(function(){
+Route::middleware(['auth:sanctum', AdminRoleMiddleware::class . ':admin'])->group(function () {
     Route::post('/admin/register', [AdminController::class, 'register']);
     Route::delete('/admins/{id}', [AdminController::class, 'destroy']);
 });
