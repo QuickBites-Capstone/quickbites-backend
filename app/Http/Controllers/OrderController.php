@@ -18,7 +18,7 @@ class OrderController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(Order::with([
+        $orders = Order::with([
             'cart.customer',
             'cart.cartItems.product',
             'cart.paymentMethod',
@@ -26,7 +26,9 @@ class OrderController extends Controller
             'reason'
         ])->get()->map(function ($order) {
             return $this->formatOrder($order);
-        }));
+        });
+
+        return response()->json($orders);
     }
 
     public function todayOrders()
