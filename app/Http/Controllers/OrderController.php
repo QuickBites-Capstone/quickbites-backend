@@ -17,16 +17,30 @@ class OrderController extends Controller
 {
     public function index()
     {
-        return Order::with([
-            'cart.customer',
-            'cart.cartItems.product',
-            'cart.paymentMethod',
-            'orderStatus',
-            'reason'
-        ])->get()->map(function ($order) {
-            return $this->formatOrder($order);
-        });
+        try {
+            $orders = Order::with([
+                'cart.customer',
+                'cart.cartItems.product',
+                'cart.paymentMethod',
+                'orderStatus',
+                'reason'
+            ])->get();
+
+            // Check if orders are empty
+            if ($orders->isEmpty()) {
+                return response()->json(['message' => 'No orders found.'], 404);
+            }
+
+            // Map orders to the desired format
+            return response()->json($orders->map(function ($order) {
+                return $this->formatOrder($order);
+            }));
+        } catch (\Exception $e) {
+            // Return the error message with a 500 status code
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
+
 
     public function todayOrders()
     {
