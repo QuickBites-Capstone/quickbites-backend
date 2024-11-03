@@ -124,7 +124,7 @@ class OrderController extends Controller
     {
         return $orderStatus ? [
             'id' => $orderStatus->id,
-            'name' => $orderStatus->name
+            'name' => $orderStatus->name,
         ] : null;
     }
 

@@ -8,7 +8,7 @@ enum OrderStatus: int
     case InProgress = 2;
     case Ready = 3;
     case Completed = 4;
-    case Canceled = 5;
+    case Cancelled = 5;
 
     public function label(): string
     {
@@ -17,7 +17,7 @@ enum OrderStatus: int
             self::InProgress => 'In Progress',
             self::Ready => 'Ready for pick-up',
             self::Completed => 'Completed',
-            self::Canceled => 'Canceled',
+            self::Cancelled => 'Cancelled',
         };
     }
 }
