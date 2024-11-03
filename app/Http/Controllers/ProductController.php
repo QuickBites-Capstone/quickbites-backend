@@ -19,10 +19,10 @@ class ProductController extends Controller
 
     public function search(Request $request)
     {
-        $query = $request->input('search');
+        $query = strtolower($request->input('search'));
 
-        $products = Product::where('name', 'LIKE', "%$query%")
-            ->orWhere('category', 'LIKE', "%$query%")
+        $products = Product::whereRaw('LOWER(name) LIKE ?', ["%$query%"])
+            ->orWhereRaw('LOWER(category) LIKE ?', ["%$query%"])
             ->get();
 
         $products->each(function ($product) {
