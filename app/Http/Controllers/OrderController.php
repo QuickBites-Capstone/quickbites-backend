@@ -12,13 +12,12 @@ use App\Http\Services\ImageService;
 use App\Models\Notification;
 use App\Events\NotificationCreated;
 use App\Events\MessageSent;
-use Illuminate\Http\JsonResponse;
 
 class OrderController extends Controller
 {
-    public function index(): JsonResponse
+    public function index()
     {
-        $orders = Order::with([
+        return Order::with([
             'cart.customer',
             'cart.cartItems.product',
             'cart.paymentMethod',
@@ -27,8 +26,6 @@ class OrderController extends Controller
         ])->get()->map(function ($order) {
             return $this->formatOrder($order);
         });
-
-        return response()->json($orders);
     }
 
     public function todayOrders()
