@@ -56,7 +56,7 @@
         
         <p>To access your account and get started, click the button below:</p>
         <p>
-            <a class="button" href="http://localhost:3000/admincms">Access AdminCMS</a>
+            <a class="button" href="https://quickbites.passafund.com/admincms">Access AdminCMS</a>
         </p>
 
         <p>If you have any questions or need assistance, feel free to reach out. We’re here to support you!</p>

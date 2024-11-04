@@ -48,7 +48,7 @@
         <p>We’re excited to have you join our community! Get ready to explore our delicious menu and effortlessly pre-order your favorite meals.</p>
         <p>To get started, check out our menu and find something you love!</p>
         <p>
-            <a class="button" href="http://localhost:3000/">Explore Quick Bites</a>
+            <a class="button" href="https://quickbites.passafund.com">Explore Quick Bites</a>
         </p>
         <p>If you have any questions or need assistance, don’t hesitate to reach out to our support team. We’re here to help!</p>
         <div class="footer">
