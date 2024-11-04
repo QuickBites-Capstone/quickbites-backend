@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\CartItem;
 use App\Http\Services\ImageService;
-use Illuminate\Support\Facades\Storage;
 
 class SearchController extends Controller
 {
@@ -25,29 +24,29 @@ class SearchController extends Controller
             ->where('name', 'like', "%{$query}%")
             ->get()
             ->map(function ($product) {
-                $inactiveCartCount = CartItem::where('product_id', $product->id)
+                
+                $totalQuantitySold = CartItem::where('product_id', $product->id)
                     ->whereHas('cart', function ($q) {
                         $q->whereNotNull('payment_id')
-                            ->whereNotNull('schedule')
-                            ->whereNotNull('total');
+                          ->whereNotNull('schedule')
+                          ->whereNotNull('total');
                     })
-                    ->count();
+                    ->sum('quantity'); 
 
-                // Determine the label based on cart count
+               
                 $product->label = null;
-                if ($inactiveCartCount > 10) {
+                if ($totalQuantitySold > 20) { 
                     $product->label = 'Hot';
-                } elseif ($inactiveCartCount > 5) {
+                } elseif ($totalQuantitySold > 5) {
                     $product->label = 'Best Seller';
                 }
 
-                // Add image_url to the product
                 $product->image_url = $this->imageService->getTemporaryImageUrl($product->image);
 
                 return $product;
             });
 
-        // Fetch the searched product first if it exists
+        
         $searchedProduct = $products->firstWhere('name', 'like', "%{$query}%");
         if ($searchedProduct) {
             $products = $products->filter(function ($product) use ($searchedProduct) {
