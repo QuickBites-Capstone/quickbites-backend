@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Cart;
+use Carbon\Carbon;
 use App\Http\Services\ImageService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
@@ -13,15 +14,16 @@ class DashboardController extends Controller
     public function getDashboardStats(): JsonResponse
     {
         $totalOrders = Order::count();
-
         $totalCustomers = Cart::distinct('customer_id')->count('customer_id');
-
         $totalEarnings = Cart::sum('total');
+
+        $dailyEarnings = Cart::whereDate('created_at', Carbon::today())->sum('total');
 
         $data = [
             'total_orders' => $totalOrders,
             'total_customers' => $totalCustomers,
             'total_earnings' => $totalEarnings,
+            'daily_earnings' => $dailyEarnings,
         ];
 
         return response()->json($data);
