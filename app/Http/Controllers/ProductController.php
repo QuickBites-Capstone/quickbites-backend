@@ -64,9 +64,10 @@ class ProductController extends Controller
         $validCategories = ['meals', 'snacks', 'chips', 'candies', 'drinks', 'supplies'];
 
         if (in_array($categoryName, $validCategories)) {
+            $perPage = $request->query('per_page', 5);
             $products = Product::whereHas('category', function ($query) use ($categoryName) {
                 $query->whereRaw('LOWER(name) = ?', [$categoryName]);
-            })->get();
+            })->paginate($perPage);
 
             $productsWithImageUrl = $products->map(function ($product) {
                 $product->image_url = $this->imageService->getTemporaryImageUrl($product->image);
@@ -75,7 +76,9 @@ class ProductController extends Controller
 
             return response()->json([
                 'category' => ucfirst($categoryName),
-                'products' => $productsWithImageUrl->isEmpty() ? [] : $productsWithImageUrl
+                'products' => $productsWithImageUrl->isEmpty() ? [] : $productsWithImageUrl,
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(), 
             ], 200);
         } else {
             return response()->json([
