@@ -14,6 +14,7 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SearchController;
 use App\Http\Middleware\AdminRoleMiddleware;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/search', [SearchController::class, 'search']);
 
@@ -69,23 +70,16 @@ Route::post('/admin/login', [AdminController::class, 'login']);
 Route::middleware('auth:sanctum')->get('/get-admin-name', [AdminController::class, 'getAdminName']);
 Route::middleware('auth:sanctum')->post('/admin/logout', [AdminController::class, 'logout']);
 
-// Routes for managing notifications
 Route::middleware('auth:sanctum')->group(function () {
-    // Get all notifications for a specific user
     Route::get('/notifications', [NotificationController::class, 'index']);
-
-    // Store a new notification
     Route::post('/notifications', [NotificationController::class, 'store']);
-
-    // Get a specific notification
     Route::get('/notifications/{id}', [NotificationController::class, 'show']);
-
-    // Update a notification
     Route::put('/notifications/{id}', [NotificationController::class, 'update']);
-
-    // Delete a notification
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 });
+
+Route::get('/dashboard/stats', [DashboardController::class, 'getDashboardStats']);
+Route::get('/dashboard/top-selling-items', [DashboardController::class, 'getTopSellingItems']);
 
 Route::post('/send-message', [MessageController::class, 'sendMessage']);
 
