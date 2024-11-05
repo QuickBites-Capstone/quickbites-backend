@@ -80,6 +80,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('/dashboard/stats', [DashboardController::class, 'getDashboardStats']);
 Route::get('/dashboard/top-selling-items', [DashboardController::class, 'getTopSellingItems']);
+Route::get('/dashboard/monthly-earnings', [DashboardController::class, 'getMonthlyEarnings']);
 
 Route::post('/send-message', [MessageController::class, 'sendMessage']);
 

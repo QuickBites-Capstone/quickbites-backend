@@ -59,4 +59,21 @@ class DashboardController extends Controller
 
         return response()->json($topSellingItems);
     }
+
+    public function getMonthlyEarnings(): JsonResponse
+    {
+        $monthlyEarnings = DB::table('orders')
+            ->join('carts', 'orders.cart_id', '=', 'carts.id')
+            ->selectRaw('MONTH(orders.created_at) as month, SUM(carts.total) as earnings')
+            ->groupBy(DB::raw('MONTH(orders.created_at)'))
+            ->orderBy(DB::raw('MONTH(orders.created_at)'))
+            ->pluck('earnings', 'month')
+            ->toArray();
+        $earningsPerMonth = array_fill(1, 12, 0);
+        foreach ($monthlyEarnings as $month => $earnings) {
+            $earningsPerMonth[$month] = $earnings;
+        }
+
+        return response()->json(['monthly_earnings' => array_values($earningsPerMonth)]);
+    }
 }
