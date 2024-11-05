@@ -64,11 +64,12 @@ class DashboardController extends Controller
     {
         $monthlyEarnings = DB::table('orders')
             ->join('carts', 'orders.cart_id', '=', 'carts.id')
-            ->selectRaw('MONTH(orders.created_at) as month, SUM(carts.total) as earnings')
-            ->groupBy(DB::raw('MONTH(orders.created_at)'))
-            ->orderBy(DB::raw('MONTH(orders.created_at)'))
+            ->selectRaw('EXTRACT(MONTH FROM orders.created_at) AS month, SUM(carts.total) AS earnings')
+            ->groupBy(DB::raw('EXTRACT(MONTH FROM orders.created_at)'))
+            ->orderBy(DB::raw('EXTRACT(MONTH FROM orders.created_at)'))
             ->pluck('earnings', 'month')
             ->toArray();
+
         $earningsPerMonth = array_fill(1, 12, 0);
         foreach ($monthlyEarnings as $month => $earnings) {
             $earningsPerMonth[$month] = $earnings;
