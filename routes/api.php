@@ -18,6 +18,7 @@ use App\Http\Controllers\DashboardController;
 
 Route::get('/search', [SearchController::class, 'search']);
 
+Route::get('/search-products', [ProductController::class, 'searchProduct']);
 Route::get('/products', [ProductController::class, 'getProductsByCategory']);
 Route::get('/products/all', [ProductController::class, 'index']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
