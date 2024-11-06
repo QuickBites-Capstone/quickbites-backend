@@ -20,14 +20,26 @@ class CustomerController extends Controller
     public function search(Request $request)
     {
         $query = strtolower($request->input('search'));
+        $driver = DB::getDriverName();
+        $customers = Customer::query();
 
-        $customers = Customer::whereRaw('LOWER(first_name) ILIKE ?', ["%$query%"])
-            ->orWhereRaw('LOWER(last_name) ILIKE ?', ["%$query%"])
-            ->orWhereRaw('LOWER(first_name || \' \' || last_name) ILIKE ?', ["%$query%"])
-            ->orWhereRaw('LOWER(last_name || \' \' || first_name) ILIKE ?', ["%$query%"])
-            ->orWhereRaw('LOWER(email) ILIKE ?', ["%$query%"])
-            ->orWhereRaw('phone_number ILIKE ?', ["%$query%"])
-            ->get();
+        if ($driver === 'pgsql') {
+            $customers->whereRaw('LOWER(first_name) ILIKE ?', ["%$query%"])
+                ->orWhereRaw('LOWER(last_name) ILIKE ?', ["%$query%"])
+                ->orWhereRaw('LOWER(first_name || \' \' || last_name) ILIKE ?', ["%$query%"])
+                ->orWhereRaw('LOWER(last_name || \' \' || first_name) ILIKE ?', ["%$query%"])
+                ->orWhereRaw('LOWER(email) ILIKE ?', ["%$query%"])
+                ->orWhereRaw('phone_number ILIKE ?', ["%$query%"]);
+        } elseif ($driver === 'mysql') {
+            $customers->whereRaw('LOWER(first_name) LIKE ?', ["%$query%"])
+                ->orWhereRaw('LOWER(last_name) LIKE ?', ["%$query%"])
+                ->orWhereRaw('LOWER(CONCAT(first_name, " ", last_name)) LIKE ?', ["%$query%"])
+                ->orWhereRaw('LOWER(CONCAT(last_name, " ", first_name)) LIKE ?', ["%$query%"])
+                ->orWhereRaw('LOWER(email) LIKE ?', ["%$query%"])
+                ->orWhereRaw('phone_number LIKE ?', ["%$query%"]);
+        }
+
+        $customers = $customers->get();
 
         $customers->each(function ($customer) {
             $customer->profile_picture_url = $this->imageService->getTemporaryImageUrl($customer->profile_picture);
@@ -35,6 +47,7 @@ class CustomerController extends Controller
 
         return response()->json($customers);
     }
+
 
     public function register(Request $request)
     {

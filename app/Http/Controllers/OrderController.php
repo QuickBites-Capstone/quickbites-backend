@@ -170,7 +170,6 @@ class OrderController extends Controller
         $header = "Your order is ready!";
         $message = "Your order is now prepared and ready for pickup. Please collect it at your earliest convenience.";
 
-        // Create notification
         $notification = Notification::create([
             'order_id' => $order->id,
             'message' => 'Your order is ready for pick-up!',
@@ -187,7 +186,6 @@ class OrderController extends Controller
         $header = "Thank You!";
         $message = "You've got your order in hand! We hope you enjoy it and can't wait to see you again soon!";
 
-        // Create notification
         $notification = Notification::create([
             'order_id' => $order->id,
             'message' => 'Thank you for ordering!',
