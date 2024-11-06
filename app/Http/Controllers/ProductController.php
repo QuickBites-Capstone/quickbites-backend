@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Services\ImageService;
 use Illuminate\Support\Facades\Storage;
@@ -17,20 +18,31 @@ class ProductController extends Controller
         $this->imageService = $imageService;
     }
 
-    public function search(Request $request)
-    {
-        $query = strtolower($request->input('search'));
+ public function searchProduct(Request $request)
+{
 
-        $products = Product::whereRaw('LOWER(name) LIKE ?', ["%$query%"])
-            ->orWhereRaw('LOWER(category) LIKE ?', ["%$query%"])
-            ->get();
+    $validated = $request->validate([
+        'searchTerm' => 'nullable|string|max:255',
+    ]);
 
-        $products->each(function ($product) {
-            $product->image_url = $this->imageService->getTemporaryImageUrl($product->image);
-        });
+    $searchTerm = $validated['searchTerm'] ?? ''; 
 
-        return response()->json($products);
+    $products = Product::when($searchTerm, function ($query) use ($searchTerm) {
+        return $query->where('name', 'like', '%' . $searchTerm . '%');
+    })
+    ->get();
+
+    if ($products->isEmpty()) {
+        return response()->json(['message' => 'No products found'], 404);
     }
+
+    return response()->json($products);
+}
+    
+
+    
+
+    
 
     public function index(Request $request)
     {
