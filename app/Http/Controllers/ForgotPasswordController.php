@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Customer;
-use App\Mail\OTP;
+use App\Mail\ForgotPassword;
 
 class ForgotPasswordController extends Controller
 {
@@ -31,7 +31,7 @@ class ForgotPasswordController extends Controller
             ['otp' => $otp, 'expires_at' => $expiresAt]
         );
 
-        Mail::to($email)->queue(new OTP($otp));
+        Mail::to($email)->queue(new ForgotPassword($otp));
 
         return response()->json(['message' => 'OTP sent to your email.'], 200);
     }
