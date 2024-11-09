@@ -11,12 +11,15 @@ class NotificationController extends Controller
     {
         $userId = $request->query('customer_id');
 
+        // Fetch notifications and order them by creation date (latest first)
         $notifications = Notification::with('order')
             ->whereHas('order.cart', function ($query) use ($userId) {
                 $query->where('customer_id', $userId);
             })
-            ->paginate(6);
+            ->orderBy('created_at', 'desc')  // Order by latest first
+            ->paginate(10);
 
+        // Map the notifications to the desired format
         $notifications = $notifications->map(function ($notification) {
             return [
                 'id' => $notification->id,
@@ -30,6 +33,7 @@ class NotificationController extends Controller
 
         return response()->json($notifications);
     }
+
 
     // Store a new notification
     public function store(Request $request)
