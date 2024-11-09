@@ -18,35 +18,35 @@ class ProductController extends Controller
         $this->imageService = $imageService;
     }
 
- public function searchProduct(Request $request)
-{
+    public function searchProduct(Request $request)
+    {
 
-    $validated = $request->validate([
-        'searchTerm' => 'nullable|string|max:255',
-    ]);
+        $validated = $request->validate([
+            'searchTerm' => 'nullable|string|max:255',
+        ]);
 
-    $searchTerm = $validated['searchTerm'] ?? ''; 
+        $searchTerm = $validated['searchTerm'] ?? '';
 
-    $products = Product::when($searchTerm, function ($query) use ($searchTerm) {
-        return $query->where('name', 'like', '%' . $searchTerm . '%');
-    })
-    ->get();
+        $products = Product::when($searchTerm, function ($query) use ($searchTerm) {
+            return $query->where('name', 'like', '%' . $searchTerm . '%');
+        })
+            ->get();
 
-    if ($products->isEmpty()) {
-        return response()->json(['message' => 'No products found'], 404);
+        if ($products->isEmpty()) {
+            return response()->json(['message' => 'No products found'], 404);
+        }
+
+        return response()->json($products);
     }
 
-    return response()->json($products);
-}
-    
 
-    
 
-    
+
+
 
     public function index(Request $request)
     {
-        $perPage = 5;
+        $perPage = 10;
 
         $products = Product::with('category')
             ->orderBy('id', 'asc')
@@ -90,7 +90,7 @@ class ProductController extends Controller
                 'category' => ucfirst($categoryName),
                 'products' => $productsWithImageUrl->isEmpty() ? [] : $productsWithImageUrl,
                 'current_page' => $products->currentPage(),
-                'last_page' => $products->lastPage(), 
+                'last_page' => $products->lastPage(),
             ], 200);
         } else {
             return response()->json([
