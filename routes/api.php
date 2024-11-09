@@ -15,6 +15,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SearchController;
 use App\Http\Middleware\AdminRoleMiddleware;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ForgotPasswordController;
 
 Route::get('/search', [SearchController::class, 'search']);
 
@@ -84,6 +85,10 @@ Route::get('/dashboard/top-selling-items', [DashboardController::class, 'getTopS
 Route::get('/dashboard/monthly-earnings', [DashboardController::class, 'getMonthlyEarnings']);
 
 Route::post('/send-message', [MessageController::class, 'sendMessage']);
+
+Route::post('/password-reset/send-otp', [ForgotPasswordController::class, 'sendOtpForPasswordReset']);
+Route::post('/password-reset/verify-otp', [ForgotPasswordController::class, 'verifyOtp']);
+Route::post('/password-reset/change-password', [ForgotPasswordController::class, 'changePassword']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();
