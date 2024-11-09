@@ -20,7 +20,7 @@ class ForgotPassword extends Mailable implements ShouldQueue
 
     public function build()
     {
-        return $this->subject('Quick Bites Password Reset Request')
+        return $this->subject('Password Reset Request')
             ->view('emails.forgot-password');
     }
 }
