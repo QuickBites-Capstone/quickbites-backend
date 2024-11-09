@@ -16,8 +16,8 @@ class NotificationController extends Controller
             ->whereHas('order.cart', function ($query) use ($userId) {
                 $query->where('customer_id', $userId);
             })
-            ->orderBy('created_at', 'desc')  // Order by latest first
-            ->paginate(10);
+            ->orderBy('created_at', 'desc');  // Order by latest first
+        // ->paginate(10);
 
         // Map the notifications to the desired format
         $notifications = $notifications->map(function ($notification) {
