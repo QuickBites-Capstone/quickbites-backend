@@ -13,8 +13,8 @@ This project is a **Laravel environment only API**.
 ### Setup Environment
 1. Clone the repository:
    ```sh
-   git clone <repository-url>
-   cd <project-directory>
+   git clone https://github.com/QuickBites-Capstone/quickbites-backend.git
+   cd quickbites-backend
    ```
 
 2. Install dependencies:
