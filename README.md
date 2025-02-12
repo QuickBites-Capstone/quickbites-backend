@@ -55,5 +55,12 @@ This project is a **Laravel environment only API**.
 Your Laravel API should now be running locally.
 
 ---
+## Contributing
+Feel free to contribute by creating issues or submitting pull requests.
 
+## License
+This project is licensed under the MIT License.
+
+---
 This backend serves as the API for the Quickbites school canteen pre-order system.
+If you need further customization or additional sections, let me know!
