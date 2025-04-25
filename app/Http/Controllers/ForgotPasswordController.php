@@ -2,95 +2,46 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\Otp\SendOtpForPasswordResetRequest;
+use App\Http\Requests\Otp\VerifyOtpForPasswordResetRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Hash;
+use App\Services\PasswordService;
 use App\Models\Customer;
-use App\Mail\ForgotPassword;
+use App\Services\OtpService;
 
 class ForgotPasswordController extends Controller
 {
-    public function sendOtpForPasswordReset(Request $request)
+
+    public function __construct(protected OtpService $otpService, protected PasswordService $passwordService)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:customers,email',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $otp = random_int(100000, 999999);
-        $expiresAt = now()->addMinutes(10);
-        $email = $request->email;
-
-        DB::table('otps')->updateOrInsert(
-            ['email' => $email],
-            ['otp' => $otp, 'expires_at' => $expiresAt]
-        );
-
-        Mail::to($email)->queue(new ForgotPassword($otp));
-
-        return response()->json(['message' => 'OTP sent to your email.'], 200);
+        $this->otpService = $otpService;
+        $this->passwordService = $passwordService;
     }
 
-    // 2. Verify OTP
-    public function verifyOtp(Request $request)
+    public function sendOtpForPasswordReset(SendOtpForPasswordResetRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:customers,email',
-            'otp' => 'required|string',
-        ]);
+        $response = $this->otpService->sendOtpForPasswordReset($request->email);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $otpRecord = DB::table('otps')->where('email', $request->email)
-            ->where('otp', $request->otp)
-            ->where('expires_at', '>', now())
-            ->first();
-
-        if (!$otpRecord) {
-            return response()->json(['message' => 'Invalid or expired OTP.'], 400);
-        }
-
-        return response()->json(['message' => 'OTP verified successfully.'], 200);
+        return response()->json(['message' => $response['message']], $response['status']);
     }
 
-    // 3. Change Password
-    public function changePassword(Request $request)
+    public function verifyOtp(VerifyOtpForPasswordResetRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email|exists:customers,email',
-            'otp' => 'required|string',
-            'new_password' => 'required|string|min:8|confirmed',
-        ]);
+        $customer = Customer::where('email', $request->email)->firstOrFail();
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        $response = $this->otpService->verifyOtp($customer, $request->otp);
 
-        // Check OTP validity again before changing password
-        $otpRecord = DB::table('otps')->where('email', $request->email)
-            ->where('otp', $request->otp)
-            ->where('expires_at', '>', now())
-            ->first();
+        return response()->json(['message' => $response['message']], $response['status']);
+    }
 
-        if (!$otpRecord) {
-            return response()->json(['message' => 'Invalid or expired OTP.'], 400);
-        }
+    public function changePassword(ChangePasswordRequest $request)
+    {
+        
+        $customer = Customer::where('email', $request->email)->firstOrFail();
 
-        // Update password
-        $customer = Customer::where('email', $request->email)->first();
-        $customer->password = Hash::make($request->new_password);
-        $customer->save();
+        $response = $this->passwordService->changePassword($customer, $request->otp, $request->new_password);
 
-        // Delete OTP after password change
-        DB::table('otps')->where('email', $request->email)->delete();
-
-        return response()->json(['message' => 'Password changed successfully.'], 200);
+        return response()->json(['message' => $response['message']], $response['status']);
     }
 }
