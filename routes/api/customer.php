@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CustomerController;
+use App\Models\Customer;
 
 Route::get('/customers', [CustomerController::class, 'search']);
 
@@ -13,3 +14,7 @@ Route::post('/customers/{id}/add-credits', [CustomerController::class, 'addCredi
 Route::post('/customers/{id}/deduct-credits', [CustomerController::class, 'deductCredits']);
 
 Route::put('customer/{customerId}/balance', [CustomerController::class, 'updateBalance']);
+
+Route::post('/send-otp', [CustomerController::class, 'sendOtpForPasswordChange']);
+Route::middleware('auth:sanctum')->post('/verify-otp', [CustomerController::class, 'verifyOtp']);
+Route::middleware('auth:sanctum')->post('/change-password', [CustomerController::class, 'changePassword']);

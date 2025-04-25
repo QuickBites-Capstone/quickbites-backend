@@ -2,31 +2,33 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\Customer\CreditsRequest;
 use App\Http\Requests\Customer\UpdateBalanceRequest;
 use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Http\Requests\Customer\UpdateProfilePictureRequest;
+use App\Http\Requests\Customer\ValidateEmailRequest;
+use App\Http\Requests\Otp\VerifyOtpRequest;
 use App\Models\Customer;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
-use App\Mail\OTP;
-use Illuminate\Support\Facades\Mail;
 use App\Http\Services\ImageService;
 use App\Repositories\CustomerRepository;
-use Illuminate\Support\Facades\DB;
 use App\Services\AuthService;
 use App\Services\CustomerService;
+use App\Services\OtpService;
+use App\Services\PasswordService;
 
 class CustomerController extends Controller
 {
     public function __construct(protected AuthService $authService, protected ImageService $imageService, protected CustomerService $customerService,
-    protected CustomerRepository $customerRepository)
+    protected CustomerRepository $customerRepository, protected OtpService $otpService, protected PasswordService $passwordService)
     {
         $this->authService = $authService;
         $this->imageService = $imageService;
         $this->customerService = $customerService;
         $this->customerRepository = $customerRepository;
+        $this->otpService = $otpService;
+        $this->passwordService = $passwordService;
     }
 
     public function search(Request $request)
@@ -124,81 +126,47 @@ class CustomerController extends Controller
         ], $response['status']);
     }
 
-    public function sendOtpForPasswordChange(Request $request)
+    public function sendOtpForPasswordChange(ValidateEmailRequest $request)
     {
         $customer = $request->user();
+
+        $customer = Customer::where('email', $request->input('email'))->first();
 
         if (!$customer) {
             return response()->json(['message' => 'User not authenticated'], 401);
         }
 
-        $otp = random_int(100000, 999999);
-        $expiresAt = now()->addMinutes(10);
+        $response = $this->otpService->sendOtpForPasswordChange($customer);
 
-        DB::table('otps')->updateOrInsert(
-            ['email' => $customer->email],
-            ['otp' => $otp, 'expires_at' => $expiresAt]
-        );
-
-        Mail::to($customer->email)->queue(new OTP($otp));
-
-        return response()->json(['message' => 'OTP sent to your email.'], 200);
+        return response()->json(['message' => $response['message']], $response['status']);
     }
 
-    public function verifyOtp(Request $request)
+    public function verifyOtp(VerifyOtpRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'otp' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
+    
         $customer = $request->user();
 
         if (!$customer) {
             return response()->json(['message' => 'User not authenticated'], 401);
         }
 
-        $otpRecord = DB::table('otps')->where('email', $customer->email)
-            ->where('otp', $request->otp)
-            ->where('expires_at', '>', now())
-            ->first();
+        $result = $this->otpService->verifyOtp($customer, $request->otp);
 
-        if (!$otpRecord) {
-            return response()->json(['message' => 'Invalid or expired OTP.'], 400);
-        }
-
-        DB::table('otps')->where('email', $customer->email)->delete();
-
-        return response()->json(['message' => 'OTP verified successfully.'], 200);
+        return response()->json(['message' => $result['message']], $result['status']);
     }
 
-
-    public function changePassword(Request $request)
+    public function changePassword(ChangePasswordRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'otp' => 'required|string',
-            'new_password' => 'required|string|min:8|confirmed:new_password_confirmation',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
+        
         $customer = $request->user();
 
         if (!$customer) {
             return response()->json(['message' => 'User not authenticated'], 401);
         }
 
-        $customer->password = Hash::make($request->new_password);
-        $customer->save();
+        $result = $this->passwordService->changePassword($customer, $request->otp, $request->new_password);
 
-        DB::table('otps')->where('email', $customer->email)->delete();
-
-        return response()->json(['message' => 'Password changed successfully.'], 200);
+        return response()->json(['message' => $result['message']], $result['status']);
     }
 
 }
