@@ -19,7 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://quickbites.jpynzon.xyz'],
+    'allowed_origins' => [
+        'https://quickbites.jpynzon.xyz',
+        env('FRONTEND_URL', 'http://localhost:3000'),
+    ],
 
     'allowed_origins_patterns' => [],
 

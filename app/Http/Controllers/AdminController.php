@@ -3,69 +3,51 @@
 namespace App\Http\Controllers;
 
 use App\Models\Admin;
-use App\Enums\AdminRoles;
+
+use App\Http\Requests\Admin\AdminLoginRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use App\Mail\AdminCredentials;
-use Illuminate\Support\Facades\Mail;
+use App\Http\Requests\Admin\RegisterAdminRequest;
+use App\Services\AdminService;
+use App\Services\AuthService;
+
 
 class AdminController extends Controller
 {
+    public function __construct(protected AdminService $adminService, protected AuthService $authService) {}
+
     public function index()
     {
         $admins = Admin::all();
         return response()->json($admins);
     }
-    public function register(Request $request)
+    public function register(RegisterAdminRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:admins',
-            'role_id' => 'required|integer',
-            'password' => 'string|confirmed',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $roleId = AdminRoles::Admin->value;
-        $randomPassword = str()->random(15);
-
-        $admin = Admin::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'password' => Hash::make($randomPassword),
-            'role_id' => $roleId,
-        ]);
-
-        Mail::to($request->email)->queue(new AdminCredentials($admin, $randomPassword));
+       
+        $admin = $this->adminService->createAdmin($request->validated());
 
         return response()->json(['admin' => $admin], 201);
     }
 
-    public function login(Request $request)
+    public function login(AdminLoginRequest $request)
     {
-        $credentials = $request->only('email', 'password');
+        try {
+            $authData = $this->authService->loginAsAdmin(
+                $request->email,
+                $request->password,
+            );
 
-        $admin = Admin::where('email', $request->email)->first();
-
-        if (!$admin || !Hash::check($request->password, $admin->password)) {
             return response()->json([
-                'message' => 'Invalid credentials!',
+                'message' => 'Login successful!',
+                'token' => $authData['token'],
+                'admin' => $authData['admin'],
+            ], 200);
+        } catch (\Exception $error) {
+            return response()-json([
+                'message' => $error->getMessage(),
             ], 401);
         }
 
-        $token = $admin->createToken('admin-auth-token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login successful!',
-            'token' => $token,
-            'admin' => $admin,
-        ], 200);
     }
 
     public function logout(Request $request)

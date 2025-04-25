@@ -21,24 +21,24 @@ class CategoryController extends Controller
         return response()->json($categories);
     }
     public function getProductsByCategory($categoryId)
-{
-    $category = Category::find($categoryId);
-    if (!$category) {
-        return response()->json(['error' => 'Category not found!'], 404);
+    {
+        $category = Category::find($categoryId);
+        if (!$category) {
+            return response()->json(['error' => 'Category not found!'], 404);
+        }
+
+        $perPage = 5;
+        $products = Product::where('category_id', $categoryId) 
+            ->orderBy('id', 'asc')
+            ->paginate($perPage);
+
+        
+        $products->getCollection()->transform(function ($product) {
+            $product->image_url = $this->imageService->getTemporaryImageUrl($product->image);
+            return $product;
+        });
+
+        return response()->json($products);
     }
-
-    $perPage = 5;
-    $products = Product::where('category_id', $categoryId) 
-        ->orderBy('id', 'asc')
-        ->paginate($perPage);
-
-    
-    $products->getCollection()->transform(function ($product) {
-        $product->image_url = $this->imageService->getTemporaryImageUrl($product->image);
-        return $product;
-    });
-
-    return response()->json($products);
-}
 
 }

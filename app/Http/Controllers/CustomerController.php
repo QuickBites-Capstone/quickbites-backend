@@ -2,127 +2,39 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Customer\CreditsRequest;
+use App\Http\Requests\Customer\UpdateBalanceRequest;
+use App\Http\Requests\Customer\UpdateCustomerRequest;
+use App\Http\Requests\Customer\UpdateProfilePictureRequest;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
-use App\Mail\WelcomeCustomer;
 use App\Mail\OTP;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Services\ImageService;
+use App\Repositories\CustomerRepository;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
-
+use App\Services\AuthService;
+use App\Services\CustomerService;
 
 class CustomerController extends Controller
 {
+    public function __construct(protected AuthService $authService, protected ImageService $imageService, protected CustomerService $customerService,
+    protected CustomerRepository $customerRepository)
+    {
+        $this->authService = $authService;
+        $this->imageService = $imageService;
+        $this->customerService = $customerService;
+        $this->customerRepository = $customerRepository;
+    }
+
     public function search(Request $request)
     {
         $query = strtolower($request->input('search'));
-        $driver = DB::getDriverName();
-        $customers = Customer::query();
-
-        if ($driver === 'pgsql') {
-            $customers->whereRaw('LOWER(first_name) ILIKE ?', ["%$query%"])
-                ->orWhereRaw('LOWER(last_name) ILIKE ?', ["%$query%"])
-                ->orWhereRaw('LOWER(first_name || \' \' || last_name) ILIKE ?', ["%$query%"])
-                ->orWhereRaw('LOWER(last_name || \' \' || first_name) ILIKE ?', ["%$query%"])
-                ->orWhereRaw('LOWER(email) ILIKE ?', ["%$query%"])
-                ->orWhereRaw('phone_number ILIKE ?', ["%$query%"]);
-        } elseif ($driver === 'mysql') {
-            $customers->whereRaw('LOWER(first_name) LIKE ?', ["%$query%"])
-                ->orWhereRaw('LOWER(last_name) LIKE ?', ["%$query%"])
-                ->orWhereRaw('LOWER(CONCAT(first_name, " ", last_name)) LIKE ?', ["%$query%"])
-                ->orWhereRaw('LOWER(CONCAT(last_name, " ", first_name)) LIKE ?', ["%$query%"])
-                ->orWhereRaw('LOWER(email) LIKE ?', ["%$query%"])
-                ->orWhereRaw('phone_number LIKE ?', ["%$query%"]);
-        }
-
-        $customers = $customers->get();
-
-        $customers->each(function ($customer) {
-            $customer->profile_picture_url = $this->imageService->getTemporaryImageUrl($customer->profile_picture);
-        });
+        $customers = $this->customerRepository->searchCustomers($query);
 
         return response()->json($customers);
-    }
-
-
-    public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|max:255|email|unique:customers,email',
-            'phone_number' => 'nullable|string|max:255',
-            'password' => 'required|string|min:8|confirmed',
-            'profile_picture' => 'nullable|image',
-            'balance' => 'nullable|numeric|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $customer = Customer::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'phone_number' => $request->phone_number,
-            'password' => Hash::make($request->password),
-            'balance' => $request->input('balance', 0.00),
-        ]);
-
-        if ($request->hasFile('profile_picture')) {
-            $imagePath = $this->imageService->storeImage($request->file('profile_picture'), 'customers');
-            $customer->profile_picture = $imagePath;
-            $customer->save();
-        }
-
-        Mail::to($request->email)->queue(new WelcomeCustomer($customer));
-
-
-        $token = $customer->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Successful registration!',
-            'customer' => $customer,
-            'token' => $token,
-            'balance' => '₱' . number_format($customer->balance, 2),
-            'profile_picture_url' => $customer->profile_picture ? $this->imageService->getTemporaryImageUrl($customer->profile_picture) : null,
-        ], 201);
-    }
-
-
-    public function login(Request $request)
-    {
-        $credentials = $request->only('email', 'password');
-
-        $customers = Customer::where('email',  $request->email)->first();
-
-        if (!$customers || !Hash::check($request->password, $customers->password)) {
-            return response()->json([
-                'message' => 'Invalid credentials!',
-            ], 401);
-        }
-
-        $token = $customers->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login successful!',
-            'token' => $token,
-            'customer' => $customers,
-        ], 200);
-    }
-
-    public function logout(Request $request)
-    {
-        $request->user()->tokens()->delete();
-
-        return response()->json([
-            'message' => 'Logged out successfully!',
-        ], 200);
     }
 
     public function getCustomerName(Request $request)
@@ -134,17 +46,9 @@ class CustomerController extends Controller
             return response()->json(['message' => 'User not authenticated'], 401);
         }
 
-        return response()->json([
-            [
-                'id' => $customer->id,
-                'first_name' => $customer->first_name,
-                'last_name' => $customer->last_name,
-                'email' => $customer->email,
-                'phone_number' => $customer->phone_number,
-                'balance' => $customer->balance,
-                'profile_picture_url' => $customer->profile_picture ? $this->imageService->getTemporaryImageUrl($customer->profile_picture) : null,
-            ]
-        ], 200);
+        $customerData = $this->customerRepository->getCustomerData($customer);
+
+        return response()->json([$customerData], 200);
     }
 
     public function getCustomerBalanceById($id)
@@ -161,118 +65,63 @@ class CustomerController extends Controller
         ], 200);
     }
 
-    public function addCredits(Request $request, $id)
+    public function addCredits(CreditsRequest $request, $id)
     {
-        $request->validate([
-            'amount' => 'required|integer|min:1',
-        ]);
 
         $customer = Customer::findOrFail($id);
+        $response = $this->customerRepository->addCredits($customer, $request->input('amount'));
 
-        $customer->balance += $request->input('amount');
-        $customer->save();
-
-        return response()->json([
-            'message' => 'Credits added successfully',
-            'balance' => $customer->balance,
-        ]);
+        return response()->json($response);
     }
 
-    public function deductCredits(Request $request, $id)
+    public function deductCredits(CreditsRequest $request, $id)
     {
-        $request->validate([
-            'amount' => 'required|integer|min:1',
-        ]);
 
         $customer = Customer::findOrFail($id);
+        $response = $this->customerRepository->deductCredits($customer, $request->input('amount'));
 
-        $customer->balance -= $request->input('amount');
-        $customer->save();
-
-        return response()->json([
-            'message' => 'Credits deducted successfully',
-            'balance' => $customer->balance,
-        ]);
+        return response()->json($response);
     }
 
-    public function updateCustomer(Request $request)
+    public function updateCustomer(UpdateCustomerRequest $request)
     {
         $customer = $request->user();
 
         if (!$customer) {
-            return response()->json(['message' => 'User not authenticated'], 401);
+            return response()->json(['message' => 'User is not authenticated'], 401);
         }
 
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:customers,email,' . $customer->id,
-            'phone_number' => 'nullable|string|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $customer->first_name = $request->first_name;
-        $customer->last_name = $request->last_name;
-        $customer->email = $request->email;
-        $customer->phone_number = $request->phone_number;
-
-        $customer->save();
+        $updatedCustomer = $this->customerService->updateProfile($customer, $request->validated());
 
         return response()->json([
             'message' => 'Profile updated successfully!',
-            'customer' => $customer,
+            'customer' => $updatedCustomer,
         ], 200);
     }
 
-    public function updateProfilePicture(Request $request)
+    public function updateProfilePicture(UpdateProfilePictureRequest $request)
     {
         $customer = $request->user();
 
-        $validator = Validator::make($request->all(), [
-            'profile_picture' => 'nullable|image',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        if (!$customer) {
+            return response()->json(['message' => 'User is not authenticated'], 401);
         }
 
-        if ($request->hasFile('profile_picture')) {
-            if ($customer->profile_picture) {
-                $this->imageService->deleteImage($customer->profile_picture);
-            }
+        $response = $this->customerService->updateProfilePicture($customer, $request->file('profile_picture'));
 
-            $imagePath = $this->imageService->storeImage($request->file('profile_picture'), 'customers');
-            $customer->profile_picture = $imagePath;
-        }
-
-        $customer->save();
-
-        return response()->json([
-            'message' => 'Profile picture updated successfully!',
-            'profile_picture_url' => $customer->profile_picture ? $this->imageService->getTemporaryImageUrl($customer->profile_picture) : null,
-        ], 200);
+        return response()->json($response, 200);
+ 
     }
 
-    public function updateBalance(Request $request, $customerId)
+    public function updateBalance(UpdateBalanceRequest $request, $customerId)
     {
         $customer = Customer::findOrFail($customerId);
-        $balance = $customer->wallet_balance;
+        $response = $this->customerRepository->updateBalance($customer, $request->input('deduction'));
 
-        $request->validate([
-            'deduction' => 'required|numeric|min:0',
-        ]);
-
-        if ($balance < $request->deduction) {
-            return response()->json(['message' => 'Insufficient balance.'], 400);
-        }
-
-        $customer->wallet_balance -= $request->deduction;
-        $customer->save();
-
-        return response()->json(['message' => 'Balance updated.', 'balance' => $customer->wallet_balance]);
+        return response()->json([
+            'message' => $response['message'],
+            'balance' => $response['balance'] ?? null
+        ], $response['status']);
     }
 
     public function sendOtpForPasswordChange(Request $request)
@@ -352,10 +201,4 @@ class CustomerController extends Controller
         return response()->json(['message' => 'Password changed successfully.'], 200);
     }
 
-    protected $imageService;
-
-    public function __construct(ImageService $imageService)
-    {
-        $this->imageService = $imageService;
-    }
 }
