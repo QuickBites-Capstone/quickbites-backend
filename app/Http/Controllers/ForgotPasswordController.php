@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\Otp\SendOtpForPasswordResetRequest;
-use App\Http\Requests\Otp\VerifyOtpForPasswordResetRequest;
+use App\Http\Requests\Otp\VerifyOtpRequest;
 use Illuminate\Http\Request;
 use App\Services\PasswordService;
 use App\Models\Customer;
@@ -26,10 +26,9 @@ class ForgotPasswordController extends Controller
         return response()->json(['message' => $response['message']], $response['status']);
     }
 
-    public function verifyOtp(VerifyOtpForPasswordResetRequest $request)
+    public function verifyOtp(VerifyOtpRequest $request)
     {
         $customer = Customer::where('email', $request->email)->firstOrFail();
-
         $response = $this->otpService->verifyOtp($customer, $request->otp);
 
         return response()->json(['message' => $response['message']], $response['status']);
@@ -39,7 +38,6 @@ class ForgotPasswordController extends Controller
     {
         
         $customer = Customer::where('email', $request->email)->firstOrFail();
-
         $response = $this->passwordService->changePassword($customer, $request->otp, $request->new_password);
 
         return response()->json(['message' => $response['message']], $response['status']);
