@@ -25,10 +25,10 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function status()
-    {
-        return $this->belongsTo(ProductStatus::class, 'status_id');
-    }
+    // public function status()
+    // {
+    //     return $this->belongsTo(ProductStatus::class, 'status_id');
+    // }
 
     public function cartItems()
     {
