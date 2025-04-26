@@ -67,12 +67,9 @@ class AdminController extends Controller
             return response()->json(['message' => 'User not authenticated'], 401);
         }
 
-        return response()->json([
-            'first_name' => $admin->first_name,
-            'last_name' => $admin->last_name,
-            'email' => $admin->email,
-            'role_id' => $admin->role_id,
-        ], 200);
+        $adminInfo = $this->adminService->getAdminInfo($admin);
+
+        return response()->json($adminInfo, 200);
     }
 
     public function destroy($id)

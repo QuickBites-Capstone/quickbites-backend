@@ -29,4 +29,9 @@ class AdminService
 
         return $admin;
     }
+
+    public function getAdminInfo(Admin $admin): array
+    {
+        return $this->adminRepository->getAdminDetails($admin);
+    }
 }

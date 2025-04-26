@@ -14,4 +14,14 @@ class AdminRepository
     {
         return Admin::where('email', $email)->first();
     }
+
+    public function getAdminDetails(Admin $admin): array
+    {
+        return [
+            'first_name' => $admin->first_name,
+            'last_name' => $admin->last_name,
+            'email' => $admin->email,
+            'role_id' => $admin->role_id,
+        ];
+    }
 }
