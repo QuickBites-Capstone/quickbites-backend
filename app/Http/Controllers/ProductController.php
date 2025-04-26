@@ -28,7 +28,6 @@ class ProductController extends Controller
     public function searchProduct(SearchProductRequest $request)
     {
         $searchTerm = $request->validated()['searchTerm'] ?? '';
-
         $products = $this->productService->searchProducts($searchTerm);
 
         if ($products->isEmpty()) {
